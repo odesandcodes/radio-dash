@@ -29,7 +29,7 @@ export async function GET() {
       comp: kusc?.composer || "KUSC Los Angeles" 
     },
     kdfc: { 
-      title: kusc?.title || "Live Broadcast", // KUSC/KDFC share an API usually
+      title: kusc?.title || "Live Broadcast", 
       comp: kusc?.composer || "KDFC San Francisco" 
     },
     wfmt: { 
