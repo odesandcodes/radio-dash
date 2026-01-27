@@ -63,46 +63,42 @@
     };
     let currentId = null;
 
-    async function sync() {
-        try {
-            // 1. Get the 'Safe' WQXR data from your API
-            const r = await fetch('/api/stations.json?v=' + Date.now());
-            const d = await r.json();
-            
-            // Apply all data
-            ['wqxr','wfmt','kusc','kdfc'].forEach(s => {
-                document.getElementById(s+'-t').innerText = d[s].title;
-                document.getElementById(s+'-c').innerText = d[s].comp;
-            });
+		async function sync() {
+		try {
+			// 1. Get WQXR from your reliable proxy
+			const r = await fetch('/api/stations.json?v=' + Date.now());
+			const d = await r.json();
+			
+			// Apply WQXR immediately
+			document.getElementById('wqxr-t').innerText = d.wqxr.title;
+			document.getElementById('wqxr-c').innerText = d.wqxr.comp;
 
-            // 2. STEALTH UPGRADE: If Chicago/LA are blocked on the server, 
-            // have the browser try a direct hit.
-            
-            // Fix KUSC & KDFC
-            if (d.kusc.title === "Classical California") {
-                const res = await fetch('https://kuscapi.org/api/playlist/current').catch(() => null);
-                if (res && res.ok) {
-                    const kData = await res.json();
-                    ['kusc', 'kdfc'].forEach(id => {
-                        document.getElementById(id+'-t').innerText = kData.title || "Classical California";
-                        document.getElementById(id+'-c').innerText = kData.composer || "KUSC/KDFC";
-                    });
-                }
-            }
+			// 2. FORCIBLY FETCH CALIFORNIA (KUSC/KDFC)
+			// We use an open-source proxy called 'AllOrigins' to hide the request
+			const calUrl = encodeURIComponent('https://kuscapi.org/api/playlist/current');
+			const calRes = await fetch(`https://api.allorigins.win/get?url=${calUrl}`);
+			const calData = await calRes.json();
+			const calJson = JSON.parse(calData.contents);
+			
+			['kusc', 'kdfc'].forEach(id => {
+				document.getElementById(id+'-t').innerText = calJson.title || "Classical California";
+				document.getElementById(id+'-c').innerText = calJson.composer || "KUSC/KDFC";
+			});
 
-            // Fix WFMT
-            if (d.wfmt.title === "Classical Chicago") {
-                const res = await fetch('https://www.wfmt.com/wp-json/wfmt/v1/playlist/current').catch(() => null);
-                if (res && res.ok) {
-                    const wData = await res.json();
-                    const track = Array.isArray(wData) ? wData[0] : wData;
-                    document.getElementById('wfmt-t').innerText = track?.title || "Classical Chicago";
-                    document.getElementById('wfmt-c').innerText = track?.composer || "WFMT";
-                }
-            }
-        } catch (e) { console.error("Sync Error", e); }
-    }
+			// 3. FORCIBLY FETCH CHICAGO (WFMT)
+			const chiUrl = encodeURIComponent('https://www.wfmt.com/wp-json/wfmt/v1/playlist/current');
+			const chiRes = await fetch(`https://api.allorigins.win/get?url=${chiUrl}`);
+			const chiData = await chiRes.json();
+			const chiJson = JSON.parse(chiData.contents);
+			const track = Array.isArray(chiJson) ? chiJson[0] : chiJson;
+			
+			document.getElementById('wfmt-t').innerText = track?.title || "Classical Chicago";
+			document.getElementById('wfmt-c').innerText = track?.composer || "WFMT";
 
+		} catch (e) {
+			console.error("Headless bypass failed:", e);
+		}
+	}
     function toggleStation(id) {
         const card = document.getElementById(`card-${id}`);
         const allCards = document.querySelectorAll('.card');
