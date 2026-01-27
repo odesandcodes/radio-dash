@@ -53,56 +53,58 @@
     <audio id="global-player" crossOrigin="anonymous"></audio>
 
     <script is:inline>
-        const player = document.getElementById('global-player');
-        // UPDATED STREAM LINKS (Direct Icecast/StreamGuys)
-		const streams = {
-			wqxr: 'https://stream.wqxr.org/wqxr.mp3',
-			// These are the "App" endpoints:
-			wfmt: 'https://wfmt.streamtheworld.com/WFMT_96_LOW_AAC.ads', 
-			kusc: 'https://128.mp3.kusc.live',
-			kdfc: 'https://128.mp3.kdfc.live'
-		};
-        let currentId = null;
+    const player = document.getElementById('global-player');
+    const streams = {
+        wqxr: 'https://stream.wqxr.org/wqxr.mp3',
+        wfmt: 'https://icecast.wfmt.com/wfmt', 
+        kusc: 'https://kuscstream.org/mp3-128',
+        kdfc: 'https://kdfcstream.org/mp3-128'
+    };
+    let currentId = null;
 
-        async function toggleStation(id) {
-            const card = document.getElementById(`card-${id}`);
-            const allCards = document.querySelectorAll('.card');
+    async function toggleStation(id) {
+        const card = document.getElementById(`card-${id}`);
+        const allCards = document.querySelectorAll('.card');
 
-            if (currentId === id && !player.paused) {
-                player.pause();
-                card.classList.remove('playing');
-                return;
-            }
-
-            allCards.forEach(c => c.classList.remove('playing'));
-            currentId = id;
+        if (currentId === id && !player.paused) {
             player.pause();
-            player.src = streams[id];
-            player.load();
-
-            try {
-                await player.play();
-                card.classList.add('playing');
-            } catch (e) {
-                console.error("Playback failed:", e);
-                // Attempt one retry
-                setTimeout(() => player.play().then(() => card.classList.add('playing')), 500);
-            }
+            card.classList.remove('playing');
+            return;
         }
 
-        async function sync() {
-            try {
-                const r = await fetch('/api/stations.json?t=' + Date.now());
-                const d = await r.json();
-                ['wqxr','wfmt','kusc','kdfc'].forEach(s => {
-                    if(d[s]) {
-                        document.getElementById(s+'-t').innerText = d[s].title;
-                        document.getElementById(s+'-c').innerText = d[s].comp;
-                    }
-                });
-            } catch (e) {}
+        allCards.forEach(c => c.classList.remove('playing'));
+        currentId = id;
+        
+        player.pause();
+        player.src = streams[id];
+        player.load();
+
+        try {
+            await player.play();
+            card.classList.add('playing');
+        } catch (e) {
+            console.error("Relay failed, trying fallback...");
+            // Final fallback to a different port if play fails
+            player.src = streams[id] + "?fallback=1";
+            player.play().then(() => card.classList.add('playing')).catch(() => {
+                alert("Network block detected on " + id.toUpperCase());
+            });
         }
-        sync(); setInterval(sync, 30000);
-    </script>
+    }
+
+    async function sync() {
+        try {
+            const r = await fetch('/api/stations.json?t=' + Date.now());
+            const d = await r.json();
+            ['wqxr','wfmt','kusc','kdfc'].forEach(s => {
+                if(d[s]) {
+                    document.getElementById(s+'-t').innerText = d[s].title;
+                    document.getElementById(s+'-c').innerText = d[s].comp;
+                }
+            });
+        } catch (e) {}
+    }
+    sync(); setInterval(sync, 30000);
+</script>
 </body>
 </html>
