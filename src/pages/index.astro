@@ -1,47 +1,19 @@
 ---
-// RADIO-BOSS: FULL PLAYER + CONTROLS
+// RADIO-BOSS: THE RELIABLE PIVOT
 ---
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Radio-Boss</title>
-    <style>
-        :root { --bg: #f8fafc; --card: #ffffff; --accent: #2563eb; --text-main: #0f172a; --text-muted: #64748b; --border: #e2e8f0; }
-        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: var(--text-main); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .container { width: 100%; max-width: 500px; }
-        h1 { font-size: 1rem; font-weight: 900; text-align: center; color: var(--text-muted); margin: 20px 0 40px 0; letter-spacing: 0.2em; }
-        .card { background: var(--card); border: 1px solid var(--border); border-radius: 24px; padding: 25px; margin-bottom: 16px; position: relative; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); -webkit-tap-highlight-color: transparent; }
-        .card.playing { border-color: var(--accent); border-width: 2px; transform: scale(1.02); }
-        .btn-ui { width: 50px; height: 50px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .playing .btn-ui { background: var(--accent); color: white; }
-        .info { flex-grow: 1; }
-        .label { font-size: 0.7rem; font-weight: 800; color: var(--accent); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px; }
-        .title { font-size: 1.1rem; font-weight: 800; margin-bottom: 2px; line-height: 1.2; }
-        .comp { font-size: 0.9rem; color: var(--text-muted); font-weight: 500; }
-        .viz { display: flex; gap: 3px; height: 15px; align-items: flex-end; opacity: 0; margin-top: 10px;}
-        .playing .viz { opacity: 1; }
-        .bar { width: 3px; background: var(--accent); border-radius: 1px; height: 4px; }
-        .playing .bar { animation: bounce 0.6s infinite ease-in-out; }
-        .playing .bar:nth-child(2) { animation-delay: 0.15s; }
-        .playing .bar:nth-child(3) { animation-delay: 0.3s; }
-        @keyframes bounce { 0%, 100% { height: 4px; } 50% { height: 15px; } }
-        .play-icon { display: block; } .pause-icon { display: none; }
-        .playing .play-icon { display: none; } .playing .pause-icon { display: block; }
-    </style>
-</head>
 <body>
     <div class="container">
         <h1>RADIO-BOSS</h1>
         <div id="ui">
-            {['wqxr', 'wfmt', 'kusc', 'kdfc'].map((id) => (
+            {['wqxr', 'jonathan', 'mission', 'lush'].map((id) => (
                 <div class="card" id={`card-${id}`} onclick={`toggleStation('${id}')`}>
                     <div class="btn-ui">
                         <svg class="play-icon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
                         <svg class="pause-icon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
                     </div>
                     <div class="info">
-                        <div class="label">{id.toUpperCase()}</div>
+                        <div class="label">{id.toUpperCase()} • {id === 'wqxr' || id === 'jonathan' ? 'New York' : 'SomaFM'}</div>
                         <div id={`${id}-t`} class="title">Live Broadcast</div>
                         <div id={`${id}-c`} class="comp">Connecting...</div>
                         <div class="viz"><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>
@@ -50,62 +22,59 @@
             ))}
         </div>
     </div>
+
     <audio id="global-player" crossOrigin="anonymous"></audio>
 
     <script is:inline>
-    const player = document.getElementById('global-player');
-    const streams = {
-    wqxr: 'https://stream.wqxr.org/wqxr.mp3', // Keep direct since it works
-    // Tunnel the blocked ones through your Cloudflare Proxy:
-    wfmt: '/api/stream?url=' + encodeURIComponent('https://icecast.wfmt.com/wfmt'), 
-    kusc: '/api/stream?url=' + encodeURIComponent('https://kuscstream.org/mp3-128'),
-    kdfc: '/api/stream?url=' + encodeURIComponent('https://kdfcstream.org/mp3-128')
-};
-    let currentId = null;
-
-    async function toggleStation(id) {
-        const card = document.getElementById(`card-${id}`);
-        const allCards = document.querySelectorAll('.card');
-
-        if (currentId === id && !player.paused) {
-            player.pause();
-            card.classList.remove('playing');
-            return;
-        }
-
-        allCards.forEach(c => c.classList.remove('playing'));
-        currentId = id;
+        const player = document.getElementById('global-player');
         
-        player.pause();
-        player.src = streams[id];
-        player.load();
+        // These are the "Bulletproof" streams
+        const streams = {
+            wqxr: 'https://stream.wqxr.org/wqxr.mp3',
+            jonathan: 'https://stream.thejonathanchannel.org/jonathan.mp3',
+            mission: 'https://ice1.somafm.com/missioncontrol-128-mp3',
+            lush: 'https://ice1.somafm.com/lush-128-mp3'
+        };
+        
+        let currentId = null;
 
-        try {
-            await player.play();
-            card.classList.add('playing');
-        } catch (e) {
-            console.error("Relay failed, trying fallback...");
-            // Final fallback to a different port if play fails
-            player.src = streams[id] + "?fallback=1";
-            player.play().then(() => card.classList.add('playing')).catch(() => {
-                alert("Network block detected on " + id.toUpperCase());
-            });
+        async function toggleStation(id) {
+            const card = document.getElementById(`card-${id}`);
+            const allCards = document.querySelectorAll('.card');
+
+            if (currentId === id && !player.paused) {
+                player.pause();
+                card.classList.remove('playing');
+                return;
+            }
+
+            allCards.forEach(c => c.classList.remove('playing'));
+            currentId = id;
+            player.pause();
+            player.src = streams[id];
+            player.load();
+
+            try {
+                await player.play();
+                card.classList.add('playing');
+            } catch (e) {
+                console.error("Playback failed:", e);
+            }
         }
-    }
 
-    async function sync() {
-        try {
-            const r = await fetch('/api/stations.json?t=' + Date.now());
-            const d = await r.json();
-            ['wqxr','wfmt','kusc','kdfc'].forEach(s => {
-                if(d[s]) {
-                    document.getElementById(s+'-t').innerText = d[s].title;
-                    document.getElementById(s+'-c').innerText = d[s].comp;
-                }
-            });
-        } catch (e) {}
-    }
-    sync(); setInterval(sync, 30000);
-</script>
+        async function sync() {
+            try {
+                const r = await fetch('/api/stations.json?t=' + Date.now());
+                const d = await r.json();
+                ['wqxr','jonathan','mission','lush'].forEach(s => {
+                    if(d[s]) {
+                        document.getElementById(s+'-t').innerText = d[s].title;
+                        document.getElementById(s+'-c').innerText = d[s].comp;
+                    }
+                });
+            } catch (e) {}
+        }
+        sync(); setInterval(sync, 30000);
+    </script>
 </body>
 </html>
