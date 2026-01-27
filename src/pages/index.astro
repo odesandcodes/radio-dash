@@ -55,11 +55,12 @@
     <script is:inline>
     const player = document.getElementById('global-player');
     const streams = {
-        wqxr: 'https://stream.wqxr.org/wqxr.mp3',
-        wfmt: 'https://icecast.wfmt.com/wfmt', 
-        kusc: 'https://kuscstream.org/mp3-128',
-        kdfc: 'https://kdfcstream.org/mp3-128'
-    };
+    wqxr: 'https://stream.wqxr.org/wqxr.mp3', // Keep direct since it works
+    // Tunnel the blocked ones through your Cloudflare Proxy:
+    wfmt: '/api/stream?url=' + encodeURIComponent('https://icecast.wfmt.com/wfmt'), 
+    kusc: '/api/stream?url=' + encodeURIComponent('https://kuscstream.org/mp3-128'),
+    kdfc: '/api/stream?url=' + encodeURIComponent('https://kdfcstream.org/mp3-128')
+};
     let currentId = null;
 
     async function toggleStation(id) {
