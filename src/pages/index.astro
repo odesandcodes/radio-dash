@@ -1,42 +1,27 @@
 ---
-// RADIO-BOSS: THE RELIABLE PIVOT (REBUILT)
+// RADIO-BOSS: THE FINAL PIVOT
 ---
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Radio-Boss</title>
     <style>
-        :root { --bg: #f8fafc; --card: #ffffff; --accent: #2563eb; --text-main: #0f172a; --text-muted: #64748b; --border: #e2e8f0; }
-        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: var(--text-main); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .container { width: 100%; max-width: 500px; }
-        h1 { font-size: 0.7rem; font-weight: 900; text-align: center; color: var(--text-muted); margin: 20px 0 40px 0; letter-spacing: 0.3em; }
-
+        body { font-family: sans-serif; background: #f8fafc; color: #0f172a; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .container { width: 100%; max-width: 400px; }
+        h1 { font-size: 0.7rem; font-weight: 900; text-align: center; color: #64748b; margin: 20px 0 40px 0; letter-spacing: 0.3em; }
         .card { 
-            background: var(--card); border: 1px solid var(--border); border-radius: 24px; 
-            padding: 25px; margin-bottom: 16px; position: relative; cursor: pointer; 
-            transition: all 0.2s ease; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
-            display: flex; align-items: center; gap: 20px; -webkit-tap-highlight-color: transparent;
+            background: white; border: 1px solid #e2e8f0; border-radius: 20px; 
+            padding: 20px; margin-bottom: 12px; cursor: pointer; 
+            display: flex; align-items: center; gap: 15px; transition: 0.2s;
         }
-        
-        .card.playing { border-color: var(--accent); border-width: 2px; transform: scale(1.02); }
-
-        .btn-ui { width: 52px; height: 52px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .playing .btn-ui { background: var(--accent); color: white; }
-        
+        .card.playing { border-color: #2563eb; border-width: 2px; transform: scale(1.02); }
+        .btn-ui { width: 45px; height: 45px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .playing .btn-ui { background: #2563eb; color: white; }
         .info { flex-grow: 1; min-width: 0; }
-        .label { font-size: 0.65rem; font-weight: 800; color: var(--accent); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px; }
-        .title { font-size: 1.05rem; font-weight: 800; margin-bottom: 2px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .comp { font-size: 0.85rem; color: var(--text-muted); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-        .viz { display: flex; gap: 3px; height: 14px; align-items: flex-end; opacity: 0; margin-top: 8px; }
-        .playing .viz { opacity: 1; }
-        .bar { width: 3px; background: var(--accent); border-radius: 1px; height: 4px; }
-        .playing .bar { animation: bounce 0.6s infinite ease-in-out; }
-        .playing .bar:nth-child(2) { animation-delay: 0.15s; }
-        .playing .bar:nth-child(3) { animation-delay: 0.3s; }
-
-        @keyframes bounce { 0%, 100% { height: 4px; } 50% { height: 14px; } }
+        .label { font-size: 0.6rem; font-weight: 800; color: #2563eb; text-transform: uppercase; margin-bottom: 4px; }
+        .title { font-size: 1rem; font-weight: 800; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .comp { font-size: 0.8rem; color: #64748b; }
         .play-icon { display: block; } .pause-icon { display: none; }
         .playing .play-icon { display: none; } .playing .pause-icon { display: block; }
     </style>
@@ -48,22 +33,19 @@
             {['wqxr', 'jonathan', 'mission', 'lush'].map((id) => (
                 <div class="card" id={`card-${id}`} onclick={`toggleStation('${id}')`}>
                     <div class="btn-ui">
-                        <svg class="play-icon" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-                        <svg class="pause-icon" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                        <svg class="play-icon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                        <svg class="pause-icon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
                     </div>
                     <div class="info">
-                        <div class="label">{id.toUpperCase()} • {id === 'wqxr' || id === 'jonathan' ? 'New York' : 'SomaFM'}</div>
-                        <div id={`${id}-t`} class="title">Live Broadcast</div>
+                        <div class="label">{id.toUpperCase()}</div>
+                        <div id={`${id}-t`} class="title">Loading...</div>
                         <div id={`${id}-c`} class="comp">Connecting...</div>
-                        <div class="viz"><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>
                     </div>
                 </div>
             ))}
         </div>
     </div>
-
-    <audio id="global-player" crossOrigin="anonymous"></audio>
-
+    <audio id="global-player"></audio>
     <script is:inline>
         const player = document.getElementById('global-player');
         const streams = {
@@ -73,34 +55,22 @@
             lush: 'https://ice1.somafm.com/lush-128-mp3'
         };
         let currentId = null;
-
-        async function toggleStation(id) {
-            const card = document.getElementById(`card-${id}`);
-            const allCards = document.querySelectorAll('.card');
-
+        function toggleStation(id) {
+            const card = document.getElementById('card-' + id);
             if (currentId === id && !player.paused) {
                 player.pause();
                 card.classList.remove('playing');
-                return;
-            }
-
-            allCards.forEach(c => c.classList.remove('playing'));
-            currentId = id;
-            player.pause();
-            player.src = streams[id];
-            player.load();
-
-            try {
-                await player.play();
+            } else {
+                document.querySelectorAll('.card').forEach(c => c.classList.remove('playing'));
+                currentId = id;
+                player.src = streams[id];
+                player.play();
                 card.classList.add('playing');
-            } catch (e) {
-                console.error("Playback error", e);
             }
         }
-
         async function sync() {
             try {
-                const r = await fetch('/api/stations.json?t=' + Date.now());
+                const r = await fetch('/api/stations.json');
                 const d = await r.json();
                 ['wqxr','jonathan','mission','lush'].forEach(s => {
                     if(d[s]) {
@@ -110,8 +80,7 @@
                 });
             } catch (e) {}
         }
-        sync();
-        setInterval(sync, 20000);
+        sync(); setInterval(sync, 20000);
     </script>
 </body>
 </html>
