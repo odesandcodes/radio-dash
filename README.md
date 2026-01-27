@@ -1,44 +1,22 @@
-# Astro Starter Kit: Minimal
+# Radio-Boss
 
-```sh
-npm create astro@latest -- --template minimal
-```
+A minimalist, high-performance radio dashboard built with Astro and Cloudflare Pages.
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+## 🏗 Infrastructure
+- **Frontend:** Astro (SSR disabled for index) for a lightning-fast Light Mode UI.
+- **Backend:** Cloudflare Functions (located in `/api/stations.json.js`) act as a server-side proxy to bypass CORS and fetch live track metadata.
+- **Audio Engine:** Native HTML5 Audio API using direct-link stream mounts.
 
-## 🚀 Project Structure
+## 🛠 How to Update a Station
+To replace a station:
+1. **Update Stream:** In `index.astro`, update the `streams` object with a direct `.mp3` or `.aac` link.
+2. **Update Metadata:** In `api/stations.json.js`, update the fetch URL and the JSON mapping to match the station's API format.
 
-Inside of your Astro project, you'll see the following folders and files:
+## 🧪 Testing New Stations (Avoid Lockouts)
+Before adding a station, test the URL in your browser:
+1. **Direct Check:** Paste the stream URL into a browser tab. If it plays, it's compatible.
+2. **DNS Check:** If you get `NXDOMAIN`, the network is blocking that domain. Look for an alternative relay URL.
+3. **Console Check:** Use DevTools (F12) to ensure no "Mixed Content" (HTTP vs HTTPS) errors exist.
 
-```text
-/
-├── public/
-├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
-```
-
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
-
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
-
-Any static assets, like images, can be placed in the `public/` directory.
-
-## 🧞 Commands
-
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
-# radio-dash
+---
+**Disclaimer:** This project is for educational purposes only. No theft of intellectual property is intended. All audio streams are the property of their respective broadcasters.

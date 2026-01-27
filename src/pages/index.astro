@@ -1,56 +1,62 @@
 ---
-// RADIO-BOSS: THE FINAL PIVOT
+// RADIO-BOSS: FINAL PRODUCTION BUILD WITH PROPER FOOTER
 ---
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Radio-Boss</title>
     <style>
-        body { font-family: sans-serif; background: #f8fafc; color: #0f172a; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .container { width: 100%; max-width: 400px; }
-        h1 { font-size: 0.7rem; font-weight: 900; text-align: center; color: #64748b; margin: 20px 0 40px 0; letter-spacing: 0.3em; }
-        .card { 
-            background: white; border: 1px solid #e2e8f0; border-radius: 20px; 
-            padding: 20px; margin-bottom: 12px; cursor: pointer; 
-            display: flex; align-items: center; gap: 15px; transition: 0.2s;
-        }
-        .card.playing { border-color: #2563eb; border-width: 2px; transform: scale(1.02); }
-        .btn-ui { width: 45px; height: 45px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .playing .btn-ui { background: #2563eb; color: white; }
+        :root { --bg: #f8fafc; --card: #ffffff; --accent: #2563eb; --text-main: #0f172a; --text-muted: #64748b; --border: #e2e8f0; }
+        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: var(--text-main); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        .container { width: 100%; max-width: 400px; flex-grow: 1; }
+        h1 { font-size: 0.7rem; font-weight: 900; text-align: center; color: var(--text-muted); margin: 20px 0 40px 0; letter-spacing: 0.3em; }
+        .card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 20px; margin-bottom: 12px; display: flex; align-items: center; gap: 15px; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .card.playing { border-color: var(--accent); border-width: 2px; transform: scale(1.02); }
+        .btn-ui { width: 48px; height: 48px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .playing .btn-ui { background: var(--accent); color: white; }
         .info { flex-grow: 1; min-width: 0; }
-        .label { font-size: 0.6rem; font-weight: 800; color: #2563eb; text-transform: uppercase; margin-bottom: 4px; }
-        .title { font-size: 1rem; font-weight: 800; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .comp { font-size: 0.8rem; color: #64748b; }
-        .play-icon { display: block; } .pause-icon { display: none; }
-        .playing .play-icon { display: none; } .playing .pause-icon { display: block; }
+        .label { font-size: 0.65rem; font-weight: 800; color: var(--accent); text-transform: uppercase; margin-bottom: 2px; }
+        .title { font-size: 1rem; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .comp { font-size: 0.8rem; color: var(--text-muted); }
+        
+        footer { margin-top: 50px; padding: 20px 0; border-top: 1px solid var(--border); width: 100%; max-width: 400px; text-align: center; }
+        .disclaimer { font-size: 0.6rem; color: var(--text-muted); line-height: 1.5; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>RADIO-BOSS</h1>
         <div id="ui">
-            {['wqxr', 'jonathan', 'mission', 'lush'].map((id) => (
+            {['wqxr', 'mission', 'lush'].map((id) => (
                 <div class="card" id={`card-${id}`} onclick={`toggleStation('${id}')`}>
                     <div class="btn-ui">
-                        <svg class="play-icon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-                        <svg class="pause-icon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
                     </div>
                     <div class="info">
                         <div class="label">{id.toUpperCase()}</div>
-                        <div id={`${id}-t`} class="title">Loading...</div>
+                        <div id={`${id}-t`} class="title">Live Broadcast</div>
                         <div id={`${id}-c`} class="comp">Connecting...</div>
                     </div>
                 </div>
             ))}
         </div>
     </div>
+
+    <footer>
+        <div class="disclaimer">
+            <strong>TECHNICAL DEMONSTRATION</strong><br>
+            Educational Research Project. All audio content and trademarks remain the property 
+            of the respective broadcasters. No content is hosted on this server. No theft of 
+            intellectual property is intended.
+        </div>
+    </footer>
+
     <audio id="global-player"></audio>
     <script is:inline>
         const player = document.getElementById('global-player');
         const streams = {
             wqxr: 'https://stream.wqxr.org/wqxr.mp3',
-            jonathan: 'https://stream.thejonathanchannel.org/jonathan.mp3',
             mission: 'https://ice1.somafm.com/missioncontrol-128-mp3',
             lush: 'https://ice1.somafm.com/lush-128-mp3'
         };
@@ -72,7 +78,7 @@
             try {
                 const r = await fetch('/api/stations.json');
                 const d = await r.json();
-                ['wqxr','jonathan','mission','lush'].forEach(s => {
+                ['wqxr','mission','lush'].forEach(s => {
                     if(d[s]) {
                         document.getElementById(s+'-t').innerText = d[s].title;
                         document.getElementById(s+'-c').innerText = d[s].comp;
