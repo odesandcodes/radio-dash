@@ -55,12 +55,13 @@
     <script is:inline>
         const player = document.getElementById('global-player');
         // UPDATED STREAM LINKS (Direct Icecast/StreamGuys)
-        const streams = {
-            wqxr: 'https://stream.wqxr.org/wqxr.mp3',
-            wfmt: 'https://wfmt.streamtheworld.com/WFMT.mp3',
-            kusc: 'https://kusc-ice.streamguys1.com/kusc-128.mp3',
-            kdfc: 'https://kdfc-ice.streamguys1.com/kdfc-128.mp3'
-        };
+		const streams = {
+			wqxr: 'https://stream.wqxr.org/wqxr.mp3',
+			// These are the "App" endpoints:
+			wfmt: 'https://wfmt.streamtheworld.com/WFMT_96_LOW_AAC.ads', 
+			kusc: 'https://128.mp3.kusc.live',
+			kdfc: 'https://128.mp3.kdfc.live'
+		};
         let currentId = null;
 
         async function toggleStation(id) {
