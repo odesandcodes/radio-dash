@@ -1,9 +1,10 @@
 ---
-// RADIO-BOSS: FINAL POLISH
+// RADIO-BOSS: PRODUCTION READY
 ---
 <html lang="en">
 <head>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Radio-Boss</title>
     <style>
         :root { --bg: #f8fafc; --card: #ffffff; --accent: #2563eb; --text-main: #0f172a; --text-muted: #64748b; --border: #e2e8f0; }
@@ -24,14 +25,13 @@
         .title { font-size: 1.1rem; font-weight: 800; margin-bottom: 4px; line-height: 1.3; padding-right: 40px; }
         .comp { font-size: 0.9rem; color: var(--text-muted); font-weight: 500; }
 
-        /* VIRTUAL VISUALIZER - FORCED ANIMATION */
         .viz { display: flex; gap: 3px; height: 20px; position: absolute; bottom: 30px; right: 30px; align-items: flex-end; opacity: 0; }
         .playing .viz { opacity: 1; }
         .bar { width: 3px; background: var(--accent); border-radius: 1px; height: 4px; }
         
         .playing .bar { animation: bounce 0.6s infinite ease-in-out; }
-        .playing .bar:nth-child(2) { animation-delay: 0.2s; }
-        .playing .bar:nth-child(3) { animation-delay: 0.4s; }
+        .playing .bar:nth-child(2) { animation-delay: 0.15s; }
+        .playing .bar:nth-child(3) { animation-delay: 0.3s; }
 
         @keyframes bounce { 0%, 100% { height: 4px; } 50% { height: 20px; } }
     </style>
@@ -43,82 +43,69 @@
             {['wqxr', 'wfmt', 'kusc', 'kdfc'].map((id) => (
                 <div class="card" id={`card-${id}`} onclick={`toggleStation('${id}')`}>
                     <div class="label">{id.toUpperCase()} • {id === 'wqxr' ? 'New York' : id === 'wfmt' ? 'Chicago' : id === 'kusc' ? 'Los Angeles' : 'San Francisco'}</div>
-                    <div id={`${id}-t`} class="title">Syncing...</div>
-                    <div id={`${id}-c`} class="comp">...</div>
+                    <div id={`${id}-t`} class="title">Live Broadcast</div>
+                    <div id={`${id}-c`} class="comp">Connecting...</div>
                     <div class="viz"><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>
                 </div>
             ))}
         </div>
     </div>
 
-    <audio id="global-player"></audio>
+    <audio id="global-player" preload="none"></audio>
 
     <script is:inline>
-    const player = document.getElementById('global-player');
-    const streams = {
-        wqxr: 'https://stream.wqxr.org/wqxr',
-        wfmt: 'https://wfmt.streamtheworld.com/WFMT.mp3',
-        kusc: 'https://128.mp3.kusc.live',
-        kdfc: 'https://128.mp3.kdfc.live'
-    };
-    let currentId = null;
+        const player = document.getElementById('global-player');
+        const streams = {
+            wqxr: 'https://stream.wqxr.org/wqxr.mp3',
+            wfmt: 'https://wfmt.streamtheworld.com/WFMT.mp3',
+            kusc: 'https://kuscstream.org/mp3-128',
+            kdfc: 'https://kdfcstream.org/mp3-128'
+        };
+        let currentId = null;
 
-		async function sync() {
-		try {
-			// 1. Get WQXR from your reliable proxy
-			const r = await fetch('/api/stations.json?v=' + Date.now());
-			const d = await r.json();
-			
-			// Apply WQXR immediately
-			document.getElementById('wqxr-t').innerText = d.wqxr.title;
-			document.getElementById('wqxr-c').innerText = d.wqxr.comp;
+        function toggleStation(id) {
+            const card = document.getElementById(`card-${id}`);
+            const allCards = document.querySelectorAll('.card');
 
-			// 2. FORCIBLY FETCH CALIFORNIA (KUSC/KDFC)
-			// We use an open-source proxy called 'AllOrigins' to hide the request
-			const calUrl = encodeURIComponent('https://kuscapi.org/api/playlist/current');
-			const calRes = await fetch(`https://api.allorigins.win/get?url=${calUrl}`);
-			const calData = await calRes.json();
-			const calJson = JSON.parse(calData.contents);
-			
-			['kusc', 'kdfc'].forEach(id => {
-				document.getElementById(id+'-t').innerText = calJson.title || "Classical California";
-				document.getElementById(id+'-c').innerText = calJson.composer || "KUSC/KDFC";
-			});
-
-			// 3. FORCIBLY FETCH CHICAGO (WFMT)
-			const chiUrl = encodeURIComponent('https://www.wfmt.com/wp-json/wfmt/v1/playlist/current');
-			const chiRes = await fetch(`https://api.allorigins.win/get?url=${chiUrl}`);
-			const chiData = await chiRes.json();
-			const chiJson = JSON.parse(chiData.contents);
-			const track = Array.isArray(chiJson) ? chiJson[0] : chiJson;
-			
-			document.getElementById('wfmt-t').innerText = track?.title || "Classical Chicago";
-			document.getElementById('wfmt-c').innerText = track?.composer || "WFMT";
-
-		} catch (e) {
-			console.error("Headless bypass failed:", e);
-		}
-	}
-    function toggleStation(id) {
-        const card = document.getElementById(`card-${id}`);
-        const allCards = document.querySelectorAll('.card');
-
-        if (currentId === id && !player.paused) {
-            player.pause();
-            player.src = "";
-            card.classList.remove('playing');
-            currentId = null;
-        } else {
-            allCards.forEach(c => c.classList.remove('playing'));
-            player.src = streams[id];
-            player.play().catch(() => console.log("Click required for audio"));
-            card.classList.add('playing');
-            currentId = id;
+            if (currentId === id && !player.paused) {
+                player.pause();
+                player.src = "";
+                card.classList.remove('playing');
+                currentId = null;
+            } else {
+                allCards.forEach(c => c.classList.remove('playing'));
+                
+                // Audio Reset Logic
+                player.pause();
+                player.src = streams[id];
+                player.load(); 
+                
+                player.play().then(() => {
+                    card.classList.add('playing');
+                    currentId = id;
+                }).catch(e => console.error("Playback Error:", e));
+            }
         }
-    }
 
-    sync();
-    setInterval(sync, 20000);
-</script>
+        async function sync() {
+            try {
+                const r = await fetch('/api/stations.json?t=' + Date.now());
+                const d = await r.json();
+                
+                ['wqxr','wfmt','kusc','kdfc'].forEach(s => {
+                    const tEl = document.getElementById(s+'-t');
+                    const cEl = document.getElementById(s+'-c');
+                    // Only update if the data actually changed from our default
+                    if(d[s] && d[s].title) {
+                        tEl.innerText = d[s].title;
+                        cEl.innerText = d[s].comp;
+                    }
+                });
+            } catch (e) { console.error("Metadata Sync error", e); }
+        }
+        
+        sync();
+        setInterval(sync, 30000);
+    </script>
 </body>
 </html>
