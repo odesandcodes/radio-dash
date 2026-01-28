@@ -65,52 +65,59 @@
 
     <audio id="global-player" crossorigin="anonymous"></audio>
     <script is:inline>
-        const player = document.getElementById('global-player');
-        
-        // GRAB KEY FROM URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const secretKey = urlParams.get('key');
+    const player = document.getElementById('global-player');
+    
+    // Improved key detection
+    const getSecretKey = () => {
+        const params = new URLSearchParams(window.location.search);
+        return params.get('key');
+    };
 
-        const streams = {
-            wqxr: 'https://stream.wqxr.org/wqxr.mp3',
-            swiss: 'https://stream.srg-ssr.ch/m/rsc_de/mp3_128',
-            salad: 'https://ice1.somafm.com/groovesalad-128-mp3',
-            deep: 'https://ice1.somafm.com/deepspaceone-128-mp3',
-            blender: 'https://ice1.somafm.com/beatblender-128-mp3'
-        };
-        let currentId = null;
+    const streams = {
+        wqxr: 'https://stream.wqxr.org/wqxr.mp3',
+        swiss: 'https://stream.srg-ssr.ch/m/rsc_de/mp3_128',
+        salad: 'https://ice1.somafm.com/groovesalad-128-mp3',
+        deep: 'https://ice1.somafm.com/deepspaceone-128-mp3',
+        blender: 'https://ice1.somafm.com/beatblender-128-mp3'
+    };
+    
+    let currentId = null;
 
-        function toggleStation(id) {
-            if (!secretKey) {
-                alert("Access Denied: Please use your secure link.");
-                return;
-            }
-            const card = document.getElementById('card-' + id);
-            if (currentId === id && !player.paused) {
-                player.pause();
-                card.classList.remove('playing');
-                return;
-            }
-            document.querySelectorAll('.card').forEach(c => c.classList.remove('playing'));
-            currentId = id;
-            player.src = streams[id];
-            player.play();
-            card.classList.add('playing');
-            sync(); 
+    function toggleStation(id) {
+        const key = getSecretKey();
+        if (key !== "joshua") {
+            alert("Access Denied: ?key=joshua required");
+            return;
         }
+        
+        const card = document.getElementById('card-' + id);
+        if (currentId === id && !player.paused) {
+            player.pause();
+            card.classList.remove('playing');
+            return;
+        }
+        
+        document.querySelectorAll('.card').forEach(c => c.classList.remove('playing'));
+        currentId = id;
+        player.src = streams[id];
+        player.play();
+        card.classList.add('playing');
+        sync(); 
+    }
 
-        async function sync() {
-            if (!currentId || player.paused || !secretKey) return;
-            try {
-                // PASS KEY TO API
-                const r = await fetch(`/api/stations.json?id=${currentId}&key=${secretKey}&t=${Date.now()}`);
-                if (r.status === 403) return; 
+    async function sync() {
+        const key = getSecretKey();
+        if (!currentId || player.paused || !key) return;
+        try {
+            const r = await fetch(`/api/stations.json?id=${currentId}&key=${key}&t=${Date.now()}`);
+            if (r.ok) {
                 const d = await r.json();
                 document.getElementById(currentId + '-t').innerText = d.title;
                 document.getElementById(currentId + '-c').innerText = d.comp;
-            } catch (e) {}
-        }
-        setInterval(sync, 30000);
-    </script>
+            }
+        } catch (e) {}
+    }
+    setInterval(sync, 30000);
+</script>
 </body>
 </html>
