@@ -66,59 +66,77 @@
 
     <audio id="global-player" crossorigin="anonymous"></audio>
 
-    <script is:inline>
-        const player = document.getElementById('global-player');
-        let sessionKey = null; // Memory-only key
+   <script is:inline>
+    const player = document.getElementById('global-player');
+    let sessionKey = null; 
+    let currentId = null;
 
-        const streams = {
-            wqxr: 'https://stream.wqxr.org/wqxr.mp3',
-            swiss: 'https://stream.srg-ssr.ch/m/rsc_de/mp3_128',
-            salad: 'https://ice1.somafm.com/groovesalad-128-mp3',
-            deep: 'https://ice1.somafm.com/deepspaceone-128-mp3',
-            blender: 'https://ice1.somafm.com/beatblender-128-mp3'
-        };
-        
-        let currentId = null;
+    const streams = {
+        wqxr: 'https://stream.wqxr.org/wqxr.mp3',
+        swiss: 'https://stream.srg-ssr.ch/m/rsc_de/mp3_128',
+        salad: 'https://ice1.somafm.com/groovesalad-128-mp3',
+        deep: 'https://ice1.somafm.com/deepspaceone-128-mp3',
+        blender: 'https://ice1.somafm.com/beatblender-128-mp3'
+    };
 
-        function toggleStation(id) {
-            if (!sessionKey) {
-                const entry = prompt("Authorization Required:");
-                if (!entry) return;
-                sessionKey = entry;
-            }
+    async function toggleStation(id) {
+        const card = document.getElementById('card-' + id);
+
+        // 1. PAUSE LOGIC (Always allowed)
+        if (currentId === id && !player.paused) {
+            player.pause();
+            card.classList.remove('playing');
+            return;
+        }
+
+        // 2. AUTH LOGIC (Only if not already authorized)
+        if (!sessionKey) {
+            const entry = prompt("Authorization Required:");
+            if (!entry) return;
             
-            const card = document.getElementById('card-' + id);
-            if (currentId === id && !player.paused) {
-                player.pause();
-                card.classList.remove('playing');
+            // Validate against server immediately
+            const isValid = await validateAndSync(id, entry);
+            if (isValid) {
+                sessionKey = entry; // Lock it in
+            } else {
+                alert("Invalid Access Code.");
                 return;
             }
-            
-            document.querySelectorAll('.card').forEach(c => c.classList.remove('playing'));
-            currentId = id;
-            player.src = streams[id];
-            player.play().catch(() => { sessionKey = null; alert("Stream Error or Invalid Auth"); });
-            card.classList.add('playing');
-            sync(); 
         }
 
-        async function sync() {
-            if (!currentId || player.paused || !sessionKey) return;
-            try {
-                const r = await fetch(`/api/stations.json?id=${currentId}&key=${sessionKey}&t=${Date.now()}`);
-                if (r.status === 403) {
-                    sessionKey = null;
-                    alert("Access Denied.");
-                    return;
-                }
-                if (r.ok) {
-                    const d = await r.json();
-                    document.getElementById(currentId + '-t').innerText = d.title;
-                    document.getElementById(currentId + '-c').innerText = d.comp;
-                }
-            } catch (e) {}
+        // 3. PLAY LOGIC
+        document.querySelectorAll('.card').forEach(c => c.classList.remove('playing'));
+        currentId = id;
+        player.src = streams[id];
+        player.play();
+        card.classList.add('playing');
+        
+        // Final sync for metadata
+        validateAndSync(id, sessionKey);
+    }
+
+    // Combined Validation and Metadata fetch
+    async function validateAndSync(id, key) {
+        try {
+            const r = await fetch(`/api/stations.json?id=${id}&key=${key}&t=${Date.now()}`);
+            if (r.ok) {
+                const d = await r.json();
+                document.getElementById(id + '-t').innerText = d.title;
+                document.getElementById(id + '-c').innerText = d.comp;
+                return true;
+            }
+            return false;
+        } catch (e) {
+            return false;
         }
-        setInterval(sync, 30000);
-    </script>
+    }
+
+    // Periodic sync only if authorized and playing
+    setInterval(() => {
+        if (currentId && !player.paused && sessionKey) {
+            validateAndSync(currentId, sessionKey);
+        }
+    }, 30000);
+</script>
 </body>
 </html>
