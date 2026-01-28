@@ -67,7 +67,6 @@
     <script is:inline>
     const player = document.getElementById('global-player');
     
-    // Improved key detection
     const getSecretKey = () => {
         const params = new URLSearchParams(window.location.search);
         return params.get('key');
@@ -84,11 +83,8 @@
     let currentId = null;
 
     function toggleStation(id) {
-        const key = getSecretKey();
-        if (key !== "joshua") {
-            alert("Access Denied: ?key=joshua required");
-            return;
-        }
+        // SILENT LOCK: If the key isn't joshua, just stop.
+        if (getSecretKey() !== "joshua") return;
         
         const card = document.getElementById('card-' + id);
         if (currentId === id && !player.paused) {
@@ -107,7 +103,9 @@
 
     async function sync() {
         const key = getSecretKey();
-        if (!currentId || player.paused || !key) return;
+        // Even the background sync stays quiet
+        if (!currentId || player.paused || key !== "joshua") return;
+        
         try {
             const r = await fetch(`/api/stations.json?id=${currentId}&key=${key}&t=${Date.now()}`);
             if (r.ok) {
