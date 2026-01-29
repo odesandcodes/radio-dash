@@ -17,7 +17,9 @@ jobs:
 
       # --- CLOUDFLARE DEPLOY ---
       - name: Build for Cloudflare
-        run: npm run build # Uses the default config (base: '/')
+        run: npm run build
+        env:
+          DEPLOY_TARGET: cloudflare # Explicitly tell it this is CF
 
       - name: Deploy to Cloudflare
         uses: cloudflare/wrangler-action@v3
@@ -28,7 +30,7 @@ jobs:
 
       # --- AWS/CADDY DEPLOY ---
       - name: Build for Caddy
-        run: DEPLOY_TARGET=caddy npm run build # Triggers the base: '/radio' logic
+        run: npm run build # No env needed here because 'static' is now the default
 
       - name: Push to AWS
         uses: easingthemes/ssh-deploy@main
