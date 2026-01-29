@@ -1,0 +1,41 @@
+name: Deploy Radio Dash
+
+on:
+  push:
+    branches:
+      - main  # or 'master' - check your branch name!
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        run: npm install
+
+      # --- CLOUDFLARE DEPLOY ---
+      - name: Build for Cloudflare
+        run: npm run build # Uses the default config (base: '/')
+
+      - name: Deploy to Cloudflare
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=radio-dash 
+
+      # --- AWS/CADDY DEPLOY ---
+      - name: Build for Caddy
+        run: DEPLOY_TARGET=caddy npm run build # Triggers the base: '/radio' logic
+
+      - name: Push to AWS
+        uses: easingthemes/ssh-deploy@main
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          REMOTE_HOST: ${{ secrets.SERVER_IP }}
+          REMOTE_USER: ubuntu
+          SOURCE: "dist/"
+          TARGET: "/var/www/radio/dist"
+          ARGS: "-rlgoDzvc -i --delete"
