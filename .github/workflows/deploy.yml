@@ -15,10 +15,10 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
-      # --- CLOUDFLARE DEPLOY ---
+      # --- STEP 1: CLOUDFLARE ONLY ---
       - name: Build for Cloudflare
-        run: npm run build # Uses astro.config.mjs by default
-
+        run: npm run build
+      
       - name: Deploy to Cloudflare
         uses: cloudflare/wrangler-action@v3
         with:
@@ -26,10 +26,10 @@ jobs:
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
           command: pages deploy dist --project-name=radio-dash 
 
-      # --- AWS/CADDY DEPLOY ---
+      # --- STEP 2: WIPE EVERYTHING AND BUILD FOR CADDY ---
       - name: Build for Caddy
         run: |
-          rm -rf .astro dist
+          rm -rf dist .astro # This is the "Safety Wipe"
           npx astro build --config astro.caddy.mjs
 
       - name: Push to AWS
@@ -38,9 +38,9 @@ jobs:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           REMOTE_HOST: ${{ secrets.SERVER_IP }}
           REMOTE_USER: ubuntu
-          SOURCE: "dist/" # This will now contain the flat files
+          SOURCE: "dist/"
           TARGET: "/var/www/radio/dist"
-          ARGS: "-rlgoDzvc -i --delete" # The --delete flag is vital here to clean the server
+          ARGS: "-rlgoDzvc -i --delete"
       - name: Push to AWS
         uses: easingthemes/ssh-deploy@main
         env:
