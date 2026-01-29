@@ -17,7 +17,7 @@ jobs:
 
       # --- CLOUDFLARE DEPLOY ---
       - name: Build for Cloudflare
-        run: npm run build # This uses astro.config.mjs by default
+        run: npm run build # Uses astro.config.mjs by default
 
       - name: Deploy to Cloudflare
         uses: cloudflare/wrangler-action@v3
@@ -28,7 +28,7 @@ jobs:
 
       # --- AWS/CADDY DEPLOY ---
       - name: Build for Caddy
-        run: npx astro build --config astro.caddy.mjs # <--- TARGETS THE NEW FILE
+        run: npx astro build --config astro.caddy.mjs # <--- FORCES THE STATIC CONFIG
 
       - name: Push to AWS
         uses: easingthemes/ssh-deploy@main
