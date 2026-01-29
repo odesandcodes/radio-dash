@@ -3,7 +3,7 @@ name: Deploy Radio Dash
 on:
   push:
     branches:
-      - main  # Make sure this matches your branch name (main or master)
+      - main
 
 jobs:
   deploy:
@@ -15,36 +15,12 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
-      # --- STEP 1: CLOUDFLARE DEPLOY ---
-      # We build this first so it is fresh and clean.
       - name: Build for Cloudflare
         run: npm run build
-        env:
-          DEPLOY_TARGET: cloudflare
 
       - name: Deploy to Cloudflare
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
-          command: pages deploy dist --project-name=radio-dash 
-
-      # --- STEP 2: AWS / CADDY DEPLOY ---
-      # We WIPE the dist folder so Cloudflare files don't mix with AWS files.
-      - name: Build for Caddy
-        run: |
-          rm -rf dist
-          rm -rf .astro
-          npx astro build --config astro.caddy.mjs
-        env:
-          DEPLOY_TARGET: caddy
-
-      - name: Push to AWS
-        uses: easingthemes/ssh-deploy@main
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          REMOTE_HOST: ${{ secrets.SERVER_IP }}
-          REMOTE_USER: ubuntu
-          SOURCE: "dist/"
-          TARGET: "/var/www/radio/dist"
-          ARGS: "-rlgoDzvc -i --delete"
+          command: pages deploy dist --project-name=radio-dash
