@@ -28,7 +28,9 @@ jobs:
 
       # --- AWS/CADDY DEPLOY ---
       - name: Build for Caddy
-        run: npx astro build --config astro.caddy.mjs # <--- FORCES THE STATIC CONFIG
+        run: |
+          rm -rf .astro dist # Clear the cache
+          npx astro build --config astro.caddy.mjs
 
       - name: Push to AWS
         uses: easingthemes/ssh-deploy@main
