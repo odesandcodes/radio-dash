@@ -1,4 +1,4 @@
-export const prerender = false;
+export const prerender = true;
 
 // The "Secret" lives only here on the server
 const SERVER_SECRET = "joshua"; 
