@@ -1,16 +1,9 @@
 import { defineConfig } from 'astro/config';
-import node from "@astrojs/node";
+import cloudflare from "@astrojs/cloudflare";
 
 export default defineConfig({
-  output: 'static', // This is the key
-  adapter: node({
-    mode: "standalone"
-  }),
-  // This forces Astro to put everything in /dist instead of /dist/client
-  build: {
-    format: 'directory',
-    client: './' 
-  },
-  base: '/radio',
-  trailingSlash: 'always',
+  output: 'server',
+  adapter: cloudflare(),
+  // REMOVE 'base' entirely for this test
+  trailingSlash: 'ignore',
 });
