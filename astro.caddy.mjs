@@ -1,10 +1,11 @@
 import { defineConfig } from 'astro/config';
+import node from "@astrojs/node"; // The "Dummy" adapter
 
 export default defineConfig({
-  output: 'static',
-  build: {
-    format: 'directory' // Ensures we get /radio/index.html instead of radio.html
-  },
+  output: 'static', // Still static!
+  adapter: node({
+    mode: "standalone"
+  }),
   base: '/radio',
   trailingSlash: 'always',
 });
