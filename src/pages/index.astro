@@ -1,56 +1,254 @@
 ---
-// RADIO-DASH: SECURE PRIVATE BUILD
 export const prerender = true;
 ---
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Radio-Dash</title>
+    <title>Radio Dashboard</title>
     <style>
-        :root { --bg: #f8fafc; --card: #ffffff; --accent: #2563eb; --text-main: #0f172a; --text-muted: #64748b; --border: #e2e8f0; }
-        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: var(--text-main); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        :root {
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --accent: #2563eb;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+        }
+        
+        [data-theme="dark"] {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --accent: #3b82f6;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border: #334155;
+        }
+        
+        * { box-sizing: border-box; transition: background-color 0.3s, color 0.3s, border-color 0.3s; }
+        body { 
+            font-family: -apple-system, system-ui, sans-serif; 
+            background: var(--bg); 
+            color: var(--text-main); 
+            margin: 0; 
+            padding: 20px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            min-height: 100vh; 
+        }
+        
+        .header { 
+            width: 100%; 
+            max-width: 400px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 20px; 
+        }
+        
+        h1 { 
+            font-size: 0.7rem; 
+            font-weight: 900; 
+            color: var(--text-muted); 
+            margin: 0; 
+            letter-spacing: 0.4em; 
+        }
+        
+        .theme-toggle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--card);
+            border: 1px solid var(--border);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+        }
+        
+        .theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
+        
         .container { width: 100%; max-width: 400px; flex-grow: 1; }
-        h1 { font-size: 0.7rem; font-weight: 900; text-align: center; color: var(--text-muted); margin: 10px 0 30px 0; letter-spacing: 0.4em; }
-        .card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 18px; margin-bottom: 10px; display: flex; align-items: center; gap: 15px; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        
+        .card { 
+            background: var(--card); 
+            border: 1px solid var(--border); 
+            border-radius: 20px; 
+            padding: 18px; 
+            margin-bottom: 10px; 
+            display: flex; 
+            align-items: center; 
+            gap: 15px; 
+            cursor: pointer; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02); 
+        }
+        
+        .card:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
         .card.playing { border-color: var(--accent); border-width: 2px; transform: scale(1.02); }
-        .btn-ui { width: 44px; height: 44px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        
+        .btn-ui { 
+            width: 44px; 
+            height: 44px; 
+            border-radius: 50%; 
+            background: #f1f5f9; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            flex-shrink: 0; 
+        }
+        
+        [data-theme="dark"] .btn-ui { background: #334155; }
         .playing .btn-ui { background: var(--accent); color: white; }
+        
         .info { flex-grow: 1; min-width: 0; }
-        .label { font-size: 0.6rem; font-weight: 800; color: var(--accent); text-transform: uppercase; margin-bottom: 2px; }
-        .title { font-size: 0.95rem; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
-        .comp { font-size: 0.75rem; color: var(--text-muted); }
-        .viz { display: flex; gap: 3px; height: 12px; align-items: flex-end; opacity: 0; margin-top: 8px; }
+        .label { 
+            font-size: 0.6rem; 
+            font-weight: 800; 
+            color: var(--accent); 
+            text-transform: uppercase; 
+            margin-bottom: 2px; 
+        }
+        
+        .title { 
+            font-size: 0.95rem; 
+            font-weight: 800; 
+            white-space: nowrap; 
+            overflow: hidden; 
+            text-overflow: ellipsis; 
+            margin-bottom: 2px; 
+        }
+        
+        .desc { font-size: 0.75rem; color: var(--text-muted); }
+        
+        .viz { 
+            display: flex; 
+            gap: 3px; 
+            height: 12px; 
+            align-items: flex-end; 
+            opacity: 0; 
+            margin-top: 8px; 
+        }
+        
         .playing .viz { opacity: 1; }
-        .bar { width: 3px; background: var(--accent); border-radius: 1px; height: 4px; }
+        .bar { 
+            width: 3px; 
+            background: var(--accent); 
+            border-radius: 1px; 
+            height: 4px; 
+        }
+        
         .playing .bar { animation: bounce 0.6s infinite ease-in-out; }
         .playing .bar:nth-child(2) { animation-delay: 0.15s; }
         .playing .bar:nth-child(3) { animation-delay: 0.3s; }
-        @keyframes bounce { 0%, 100% { height: 4px; } 50% { height: 12px; } }
-        footer { margin-top: 30px; padding: 20px 0; border-top: 1px solid var(--border); width: 100%; max-width: 400px; text-align: center; }
-        .disclaimer { font-size: 0.55rem; color: var(--text-muted); line-height: 1.4; }
+        
+        @keyframes bounce { 
+            0%, 100% { height: 4px; } 
+            50% { height: 12px; } 
+        }
+        
+        footer { 
+            margin-top: 30px; 
+            padding: 20px 0; 
+            border-top: 1px solid var(--border); 
+            width: 100%; 
+            max-width: 400px; 
+        }
+        
+        .credits { 
+            font-size: 0.7rem; 
+            color: var(--text-muted); 
+            line-height: 1.6; 
+            margin-bottom: 10px; 
+        }
+        
+        .credits strong { color: var(--text-main); }
+        .credits a { color: var(--accent); text-decoration: none; }
+        .credits a:hover { text-decoration: underline; }
+        
+        .disclaimer { 
+            font-size: 0.6rem; 
+            color: var(--text-muted); 
+            line-height: 1.4; 
+            margin-top: 15px; 
+            padding-top: 15px; 
+            border-top: 1px solid var(--border); 
+        }
     </style>
 </head>
 <body>
+    <div class="header">
+        <h1>RADIO DASHBOARD</h1>
+        <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <line x1="12" y1="1" x2="12" y2="3"/>
+                <line x1="12" y1="21" x2="12" y2="23"/>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                <line x1="1" y1="12" x2="3" y2="12"/>
+                <line x1="21" y1="12" x2="23" y2="12"/>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+            </svg>
+        </button>
+    </div>
+
     <div class="container">
-        <h1>RADIO-DASH</h1>
-        <div id="ui">
+        <div id="stations">
             {[
-                {id: 'wqxr', name: 'WQXR New York'},
-                {id: 'swiss', name: 'Swiss Classic'},
-                {id: 'salad', name: 'Groove Salad'},
-                {id: 'deep', name: 'Deep Space One'},
-                {id: 'blender', name: 'Beat Blender'}
+                {
+                    id: 'wqxr',
+                    name: 'WQXR',
+                    title: 'New York Public Radio',
+                    desc: 'Classical music from New York',
+                    url: 'https://stream.wqxr.org/wqxr'
+                },
+                {
+                    id: 'kusc',
+                    name: 'KUSC',
+                    title: 'Classical California',
+                    desc: 'Los Angeles classical station',
+                    url: 'https://stream.publicradio.org/kusc.mp3'
+                },
+                {
+                    id: 'swiss',
+                    name: 'SWISS',
+                    title: 'Radio Swiss Classic',
+                    desc: 'European classical favorites',
+                    url: 'https://stream.srg-ssr.ch/m/rsc_de/mp3_128'
+                },
+                {
+                    id: 'salad',
+                    name: 'SOMA',
+                    title: 'Groove Salad',
+                    desc: 'Ambient electronic grooves',
+                    url: 'https://ice1.somafm.com/groovesalad-128-mp3'
+                },
+                {
+                    id: 'deep',
+                    name: 'SOMA',
+                    title: 'Deep Space One',
+                    desc: 'Ambient space music',
+                    url: 'https://ice1.somafm.com/deepspaceone-128-mp3'
+                }
             ].map((st) => (
-                <div class="card" id={`card-${st.id}`} onclick={`toggleStation('${st.id}')`}>
+                <div class="card" id={`card-${st.id}`} data-url={st.url}>
                     <div class="btn-ui">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M8 5v14l11-7z"/>
+                        </svg>
                     </div>
                     <div class="info">
-                        <div class="label">{st.id.toUpperCase()}</div>
-                        <div id={`${st.id}-t`} class="title">{st.name}</div>
-                        <div id={`${st.id}-c`} class="comp">Restricted Access</div>
-                        <div class="viz"><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>
+                        <div class="label">{st.name}</div>
+                        <div class="title">{st.title}</div>
+                        <div class="desc">{st.desc}</div>
+                        <div class="viz">
+                            <div class="bar"></div>
+                            <div class="bar"></div>
+                            <div class="bar"></div>
+                        </div>
                     </div>
                 </div>
             ))}
@@ -58,86 +256,64 @@ export const prerender = true;
     </div>
 
     <footer>
+        <div class="credits">
+            <strong>Stream Sources:</strong><br>
+            <a href="https://www.wqxr.org" target="_blank">WQXR New York Public Radio</a><br>
+            <a href="https://www.kusc.org" target="_blank">KUSC Classical California</a><br>
+            <a href="https://www.radioswissclassic.ch" target="_blank">Radio Swiss Classic</a><br>
+            <a href="https://somafm.com" target="_blank">SomaFM</a>
+        </div>
         <div class="disclaimer">
-            <strong>TECHNICAL DEMONSTRATION</strong><br>
-            Educational Research Project. Private Access.<br>
-            No content hosted on this server. MIT License.
+            All streams are served directly from their respective sources. 
+            No content is hosted on this server. This page simply provides 
+            playback controls for publicly available radio streams. 
+            All rights reserved by original broadcasters.
         </div>
     </footer>
 
-    <audio id="global-player" crossorigin="anonymous"></audio>
+    <audio id="player"></audio>
 
-   <script is:inline>
-    const player = document.getElementById('global-player');
-    let sessionKey = null; 
-    let currentId = null;
+    <script is:inline>
+        const player = document.getElementById('player');
+        let currentId = null;
 
-    const streams = {
-        wqxr: 'https://stream.wqxr.org/wqxr.mp3',
-        swiss: 'https://stream.srg-ssr.ch/m/rsc_de/mp3_128',
-        salad: 'https://ice1.somafm.com/groovesalad-128-mp3',
-        deep: 'https://ice1.somafm.com/deepspaceone-128-mp3',
-        blender: 'https://ice1.somafm.com/beatblender-128-mp3'
-    };
-
-    async function toggleStation(id) {
-        const card = document.getElementById('card-' + id);
-
-        // 1. PAUSE LOGIC (Always allowed)
-        if (currentId === id && !player.paused) {
-            player.pause();
-            card.classList.remove('playing');
-            return;
+        // Theme toggle
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
         }
 
-        // 2. AUTH LOGIC (Only if not already authorized)
-        if (!sessionKey) {
-            const entry = prompt("Authorization Required:");
-            if (!entry) return;
-            
-            // Validate against server immediately
-            const isValid = await validateAndSync(id, entry);
-            if (isValid) {
-                sessionKey = entry; // Lock it in
-            } else {
-                alert("Invalid Access Code.");
-                return;
-            }
-        }
+        // Load saved theme
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
 
-        // 3. PLAY LOGIC
-        document.querySelectorAll('.card').forEach(c => c.classList.remove('playing'));
-        currentId = id;
-        player.src = streams[id];
-        player.play();
-        card.classList.add('playing');
-        
-        // Final sync for metadata
-        validateAndSync(id, sessionKey);
-    }
+        // Station playback
+        document.querySelectorAll('.card').forEach(card => {
+            card.addEventListener('click', () => {
+                const id = card.id.replace('card-', '');
+                const url = card.dataset.url;
 
-    // Combined Validation and Metadata fetch
-    async function validateAndSync(id, key) {
-        try {
-            const r = await fetch(`/api/stations.json?id=${id}&key=${key}&t=${Date.now()}`);
-            if (r.ok) {
-                const d = await r.json();
-                document.getElementById(id + '-t').innerText = d.title;
-                document.getElementById(id + '-c').innerText = d.comp;
-                return true;
-            }
-            return false;
-        } catch (e) {
-            return false;
-        }
-    }
+                // If same station is playing, pause it
+                if (currentId === id && !player.paused) {
+                    player.pause();
+                    card.classList.remove('playing');
+                    currentId = null;
+                    return;
+                }
 
-    // Periodic sync only if authorized and playing
-    setInterval(() => {
-        if (currentId && !player.paused && sessionKey) {
-            validateAndSync(currentId, sessionKey);
-        }
-    }, 30000);
-</script>
+                // Stop all other stations
+                document.querySelectorAll('.card').forEach(c => c.classList.remove('playing'));
+
+                // Play selected station
+                currentId = id;
+                player.src = url;
+                player.play();
+                card.classList.add('playing');
+            });
+        });
+    </script>
 </body>
 </html>
