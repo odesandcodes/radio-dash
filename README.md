@@ -1,30 +1,40 @@
-# Radio-Dash 📻
+# Radio Dashboard
 
-A private, high-fidelity radio dashboard for deep-focus work. Designed for minimalist aesthetics and ephemeral security.
+Clean, minimal web radio player with light/dark mode.
 
-## 🚀 Tech Stack
-- **Framework:** Astro (Static)
-- **Deployment:** Cloudflare Pages
-- **Backend:** Cloudflare Functions (Serverless API Proxy)
-- **Audio:** Native HTML5 Audio API (Standard Mounts)
+**Live:** [radidash.odesandcodes.com](https://radidash.odesandcodes.com)
 
-## 🔐 The "Joshua" Protocol
-This application utilizes a **Memory-Only Authorization** model. 
-- **Persistence:** None. Authorization is discarded upon tab closure or refresh.
-- **Handshake:** On the first interaction per session, a browser prompt will appear. 
-- **Verification:** The entered key is verified server-side via the `/api/stations.json` proxy. Incorrect keys result in a `403 Forbidden` and a lockout of both audio and metadata.
+## Features
 
-## 📡 Station Lineup
-| Station | Genre | Provider |
-| :--- | :--- | :--- |
-| **WQXR** | Classical | New York Public Radio |
-| **Swiss Classic** | Classical | SSR SRG (Switzerland) |
-| **Groove Salad** | Ambient/Downtempo | SomaFM |
-| **Deep Space One** | Deep Ambient | SomaFM |
-| **Beat Blender** | Mid-tempo House | SomaFM |
+- 🎵 Direct streaming from public radio stations
+- 🌓 Light/dark mode toggle with saved preference
+- 📱 Responsive mobile-friendly design
+- ⚡ Zero audio relay - streams connect directly to stations
+- 🎨 Clean, card-based UI
 
-## 🛠 Maintenance
-To swap stations, update the `streams` object in `src/pages/index.astro` and the conditional logic in `src/pages/api/stations.json.js`. 
+## Stations
 
----
-**Private Repository:** Internal use only. MIT License.
+- **WQXR** - New York Public Radio classical
+- **Radio Swiss Classic** - European classical favorites
+- **SomaFM** - Groove Salad, Deep Space One, Beat Blender
+
+## Tech Stack
+
+- Astro (static site generation)
+- Vanilla JavaScript (no frameworks)
+- HTML5 Audio API
+- CSS custom properties for theming
+
+
+## Legal
+
+All audio streams are served directly from their respective broadcasters. No content is hosted or redistributed by this application. This is simply a playback interface for publicly available radio streams.
+
+Stream sources:
+- [WQXR](https://www.wqxr.org)
+- [Radio Swiss Classic](https://www.radioswissclassic.ch)
+- [SomaFM](https://somafm.com)
+
+## License
+
+MIT
