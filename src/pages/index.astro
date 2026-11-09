@@ -31,7 +31,7 @@ export const prerender = true;
             background: var(--bg); 
             color: var(--text-main); 
             margin: 0; 
-            padding: 20px; 
+            padding: 12px; 
             display: flex; 
             flex-direction: column; 
             align-items: center; 
@@ -44,7 +44,7 @@ export const prerender = true;
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
-            margin-bottom: 20px; 
+            margin-bottom: 10px; 
         }
         
         h1 { 
@@ -75,7 +75,7 @@ export const prerender = true;
         #stations {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
+            gap: 8px;
         }
 
         /* Landscape phone / wider screen: 3 across, so 6 stations fit in 2 rows */
@@ -84,7 +84,7 @@ export const prerender = true;
         }
 
         .status {
-            margin-top: 14px;
+            margin-top: 8px;
             min-height: 1.2em;
             font-size: 0.75rem;
             color: var(--text-muted);
@@ -95,15 +95,15 @@ export const prerender = true;
             background: var(--card); 
             border: 1px solid var(--border); 
             border-radius: 20px; 
-            padding: 16px 12px; 
+            padding: 10px 8px; 
             display: flex; 
             flex-direction: column;
             align-items: center;
             text-align: center;
-            gap: 8px; 
+            gap: 6px; 
             cursor: pointer; 
             box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-            min-height: 150px;
+            min-height: 126px;
             justify-content: center;
         }
         
@@ -112,8 +112,8 @@ export const prerender = true;
         .card.loading { border-color: var(--accent); border-style: dashed; }
         
         .btn-ui { 
-            width: 44px; 
-            height: 44px; 
+            width: 38px; 
+            height: 38px; 
             border-radius: 50%; 
             background: #f1f5f9; 
             display: flex; 
@@ -153,7 +153,7 @@ export const prerender = true;
             align-items: flex-end; 
             justify-content: center;
             opacity: 0; 
-            margin-top: 8px; 
+            margin-top: 4px; 
         }
         
         .playing .viz { opacity: 1; }
@@ -174,8 +174,8 @@ export const prerender = true;
         }
         
         footer { 
-            margin-top: 30px; 
-            padding: 20px 0; 
+            margin-top: 14px; 
+            padding: 12px 0; 
             border-top: 1px solid var(--border); 
             width: 100%; 
             max-width: 720px; 
@@ -237,6 +237,13 @@ export const prerender = true;
                     desc: 'NYC NPR — news & talk',
                     url: 'https://fm939.wnyc.org/wnycfm'
                 },
+                {
+                    id: 'wabc',
+                    name: 'WABC',
+                    title: 'WABC 770 AM',
+                    desc: 'NYC talk — Kelly, Sid, Kilmeade',
+                    url: 'https://playerservices.streamtheworld.com/api/livestream-redirect/WABCAM.mp3'
+                },
              
                 {
                     id: 'swiss',
@@ -244,6 +251,13 @@ export const prerender = true;
                     title: 'Radio Swiss Classic',
                     desc: 'European classical favorites',
                     url: 'https://stream.srg-ssr.ch/m/rsc_de/mp3_128'
+                },
+                {
+                    id: 'kusc',
+                    name: 'KUSC',
+                    title: 'KUSC 91.5 FM',
+                    desc: 'Classical music from Los Angeles',
+                    url: 'https://playerservices.streamtheworld.com/api/livestream-redirect/KUSCMP256.mp3'
                 },
                 {
                     id: 'salad',
@@ -290,7 +304,9 @@ export const prerender = true;
             <strong>Stream Sources:</strong><br>
             <a href="https://www.wqxr.org" target="_blank">WQXR New York Public Radio</a><br>
             <a href="https://www.wnyc.org" target="_blank">WNYC New York Public Radio</a><br>
+            <a href="https://www.wabcradio.com" target="_blank">WABC New York</a><br>
             <a href="https://www.radioswissclassic.ch" target="_blank">Radio Swiss Classic</a><br>
+            <a href="https://www.kusc.org" target="_blank">KUSC Classical California</a><br>
             <a href="https://somafm.com" target="_blank">SomaFM</a>
         </div>
         <div class="disclaimer">
