@@ -279,6 +279,13 @@ export const prerender = true;
                     title: 'Deep Space One',
                     desc: 'Ambient space music',
                     url: 'https://ice1.somafm.com/deepspaceone-128-mp3'
+                },
+                {
+                    id: 'wtop',
+                    name: 'WTOP',
+                    title: 'WTOP 103.5 FM',
+                    desc: 'DC all-news',
+                    url: 'https://playerservices.streamtheworld.com/api/livestream-redirect/WTOPFM.mp3'
                 }
             ].map((st) => (
                 <div class="card" id={`card-${st.id}`} data-url={st.url}>
@@ -315,7 +322,8 @@ export const prerender = true;
             <a href="https://www.am970theanswer.com" target="_blank">WNYM 970 The Answer</a><br>
             <a href="https://www.radioswissclassic.ch" target="_blank">Radio Swiss Classic</a><br>
             <a href="https://www.kusc.org" target="_blank">KUSC Classical California</a><br>
-            <a href="https://somafm.com" target="_blank">SomaFM</a>
+            <a href="https://somafm.com" target="_blank">SomaFM</a><br>
+            <a href="https://wtop.com" target="_blank">WTOP Washington</a>
         </div>
         <div class="disclaimer">
             All streams are served directly from their respective sources. 
