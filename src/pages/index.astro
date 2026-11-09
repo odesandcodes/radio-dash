@@ -40,7 +40,7 @@ export const prerender = true;
         
         .header { 
             width: 100%; 
-            max-width: 400px; 
+            max-width: 720px; 
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
@@ -70,23 +70,46 @@ export const prerender = true;
         
         .theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
         
-        .container { width: 100%; max-width: 400px; flex-grow: 1; }
+        .container { width: 100%; max-width: 720px; flex-grow: 1; }
+
+        #stations {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        /* Landscape phone / wider screen: 3 across, so 6 stations fit in 2 rows */
+        @media (min-width: 640px) {
+            #stations { grid-template-columns: repeat(3, 1fr); }
+        }
+
+        .status {
+            margin-top: 14px;
+            min-height: 1.2em;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-align: center;
+        }
         
         .card { 
             background: var(--card); 
             border: 1px solid var(--border); 
             border-radius: 20px; 
-            padding: 18px; 
-            margin-bottom: 10px; 
+            padding: 16px 12px; 
             display: flex; 
-            align-items: center; 
-            gap: 15px; 
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 8px; 
             cursor: pointer; 
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02); 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            min-height: 150px;
+            justify-content: center;
         }
         
         .card:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
         .card.playing { border-color: var(--accent); border-width: 2px; transform: scale(1.02); }
+        .card.loading { border-color: var(--accent); border-style: dashed; }
         
         .btn-ui { 
             width: 44px; 
@@ -102,7 +125,7 @@ export const prerender = true;
         [data-theme="dark"] .btn-ui { background: #334155; }
         .playing .btn-ui { background: var(--accent); color: white; }
         
-        .info { flex-grow: 1; min-width: 0; }
+        .info { flex-grow: 1; min-width: 0; width: 100%; }
         .label { 
             font-size: 0.6rem; 
             font-weight: 800; 
@@ -114,19 +137,18 @@ export const prerender = true;
         .title { 
             font-size: 0.95rem; 
             font-weight: 800; 
-            white-space: nowrap; 
-            overflow: hidden; 
-            text-overflow: ellipsis; 
+            line-height: 1.2;
             margin-bottom: 2px; 
         }
         
-        .desc { font-size: 0.75rem; color: var(--text-muted); }
+        .desc { font-size: 0.75rem; color: var(--text-muted); line-height: 1.3; }
         
         .viz { 
             display: flex; 
             gap: 3px; 
             height: 12px; 
             align-items: flex-end; 
+            justify-content: center;
             opacity: 0; 
             margin-top: 8px; 
         }
@@ -153,7 +175,7 @@ export const prerender = true;
             padding: 20px 0; 
             border-top: 1px solid var(--border); 
             width: 100%; 
-            max-width: 400px; 
+            max-width: 720px; 
         }
         
         .credits { 
@@ -205,6 +227,13 @@ export const prerender = true;
                     desc: 'Classical music from New York',
                     url: 'https://stream.wqxr.org/wqxr'
                 },
+                {
+                    id: 'wnyc',
+                    name: 'WNYC',
+                    title: 'WNYC 93.9 FM',
+                    desc: 'NYC NPR — news & talk',
+                    url: 'https://fm939.wnyc.org/wnycfm'
+                },
              
                 {
                     id: 'swiss',
@@ -247,12 +276,14 @@ export const prerender = true;
                 </div>
             ))}
         </div>
+        <div id="status" class="status" aria-live="polite"></div>
     </div>
 
     <footer>
         <div class="credits">
             <strong>Stream Sources:</strong><br>
             <a href="https://www.wqxr.org" target="_blank">WQXR New York Public Radio</a><br>
+            <a href="https://www.wnyc.org" target="_blank">WNYC New York Public Radio</a><br>
             <a href="https://www.radioswissclassic.ch" target="_blank">Radio Swiss Classic</a><br>
             <a href="https://somafm.com" target="_blank">SomaFM</a>
         </div>
@@ -268,7 +299,20 @@ export const prerender = true;
 
     <script is:inline>
         const player = document.getElementById('player');
+        const statusEl = document.getElementById('status');
         let currentId = null;
+        let playSeq = 0;
+        let switching = false;
+
+        function setStatus(msg) { if (statusEl) statusEl.textContent = msg || ''; }
+        function clearCardState() {
+            document.querySelectorAll('.card').forEach(c => c.classList.remove('playing', 'loading'));
+        }
+        function cardFor(id) { return document.getElementById('card-' + id); }
+        function titleFor(id) {
+            const card = cardFor(id);
+            return card ? (card.querySelector('.title') || {}).textContent || id : id;
+        }
 
         // Theme toggle
         function toggleTheme() {
@@ -283,28 +327,76 @@ export const prerender = true;
         const savedTheme = localStorage.getItem('theme') || 'light';
         document.documentElement.setAttribute('data-theme', savedTheme);
 
+        // The 'playing' highlight is now driven by the audio element itself,
+        // not by the tap. That was the false-playing bug: the old code added
+        // .playing right after calling player.play(), before playback had
+        // actually started, and never removed it if play() failed or the
+        // stream errored / was paused from the earbuds / OS.
+        player.addEventListener('playing', () => {
+            if (!currentId) return;
+            clearCardState();
+            const card = cardFor(currentId);
+            if (card) card.classList.add('playing');
+            setStatus('Playing: ' + titleFor(currentId));
+        });
+        player.addEventListener('pause', () => {
+            // 'pause' also fires when we deliberately stop the old stream
+            // to switch stations — ignore it during a switch.
+            if (switching) return;
+            clearCardState();
+            if (currentId) setStatus('Paused');
+        });
+        player.addEventListener('error', () => {
+            clearCardState();
+            currentId = null;
+            setStatus("Couldn't play that station — tap it again to retry");
+        });
+        player.addEventListener('waiting', () => {
+            if (currentId) setStatus('Buffering: ' + titleFor(currentId) + '…');
+        });
+
         // Station playback
         document.querySelectorAll('.card').forEach(card => {
-            card.addEventListener('click', () => {
+            card.addEventListener('click', async () => {
                 const id = card.id.replace('card-', '');
                 const url = card.dataset.url;
 
-                // If same station is playing, pause it
+                // Tap the station that's actually playing: pause it.
                 if (currentId === id && !player.paused) {
                     player.pause();
-                    card.classList.remove('playing');
                     currentId = null;
+                    clearCardState();
+                    setStatus('Paused');
                     return;
                 }
 
-                // Stop all other stations
-                document.querySelectorAll('.card').forEach(c => c.classList.remove('playing'));
-
-                // Play selected station
+                // Switch: stop the old stream cleanly first, and give this
+                // tap a sequence number so a slow earlier tap can't
+                // overwrite a newer one when the user taps fast.
+                const mySeq = ++playSeq;
+                switching = true;
+                clearCardState();
+                card.classList.add('loading');
+                setStatus('Loading: ' + titleFor(id) + '…');
                 currentId = id;
+                try { player.pause(); } catch (e) {}
                 player.src = url;
-                player.play();
-                card.classList.add('playing');
+                try { player.load(); } catch (e) {}
+                try {
+                    await player.play();
+                } catch (e) {
+                    // Stale tap, or the browser / stream refused to play.
+                    if (mySeq !== playSeq) return;
+                    switching = false;
+                    clearCardState();
+                    currentId = null;
+                    setStatus("Couldn't play that station — tap it again to retry");
+                    return;
+                }
+                switching = false;
+                // 'playing' event above adds the highlight once audio
+                // is really flowing. If it already fired, the card is
+                // already marked; don't mark it here on a bare promise.
             });
         });
     </script>
