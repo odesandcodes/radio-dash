@@ -6,6 +6,9 @@ export const prerender = true;
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Radio Dashboard</title>
+    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="theme-color" content="#2563eb">
+    <link rel="apple-touch-icon" href="/icon-192.png">
     <style>
         :root {
             --bg: #f8fafc;
@@ -431,6 +434,14 @@ export const prerender = true;
                 // already marked; don't mark it here on a bare promise.
             });
         });
+
+        // Installable Chrome app: register the service worker (also what
+        // makes Chrome offer "Install app" for this site).
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').catch(() => {});
+            });
+        }
 
         // Bluetooth earbud controls (Galaxy Buds taps) via the Media Session API.
         // Single tap = play/pause, double tap = next station, triple tap = previous.
