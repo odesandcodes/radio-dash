@@ -331,6 +331,7 @@ export const prerender = true;
         const player = document.getElementById('player');
         const statusEl = document.getElementById('status');
         let currentId = null;
+        let lastId = null;
         let playSeq = 0;
         let switching = false;
 
@@ -363,11 +364,12 @@ export const prerender = true;
         // actually started, and never removed it if play() failed or the
         // stream errored / was paused from the earbuds / OS.
         player.addEventListener('playing', () => {
-            if (!currentId) return;
-            clearCardState();
+            if (!currentId) return;            clearCardState();
             const card = cardFor(currentId);
             if (card) card.classList.add('playing');
             setStatus('Playing: ' + titleFor(currentId));
+            lastId = currentId;
+            updateMediaMetadata();
         });
         player.addEventListener('pause', () => {
             // 'pause' also fires when we deliberately stop the old stream
@@ -429,6 +431,51 @@ export const prerender = true;
                 // already marked; don't mark it here on a bare promise.
             });
         });
+
+        // Bluetooth earbud controls (Galaxy Buds taps) via the Media Session API.
+        // Single tap = play/pause, double tap = next station, triple tap = previous.
+        // Without these handlers the OS only knows play/pause; next/previous
+        // were ignored because the page never said what "next" means.
+        const stationCards = Array.from(document.querySelectorAll('.card'));
+        function descFor(id) {
+            const card = cardFor(id);
+            return card ? (card.querySelector('.desc') || {}).textContent || '' : '';
+        }
+        function updateMediaMetadata() {
+            if (!('mediaSession' in navigator) || !currentId) return;
+            try {
+                navigator.mediaSession.metadata = new MediaMetadata({
+                    title: titleFor(currentId),
+                    artist: descFor(currentId),
+                    album: 'radidash'
+                });
+            } catch (e) {}
+        }
+        function stationIndex(id) {
+            return stationCards.findIndex(c => c.id.replace('card-', '') === id);
+        }
+        function stepStation(dir) {
+            if (!stationCards.length) return;
+            let i = currentId ? stationIndex(currentId) : stationIndex(lastId);
+            if (i < 0) i = 0;
+            const next = (i + dir + stationCards.length) % stationCards.length;
+            stationCards[next].click();
+        }
+        if ('mediaSession' in navigator) {
+            try {
+                navigator.mediaSession.setActionHandler('play', () => {
+                    if (currentId) {
+                        if (player.paused) player.play().catch(() => {});
+                        return;
+                    }
+                    const card = lastId ? cardFor(lastId) : stationCards[0];
+                    if (card) card.click();
+                });
+                navigator.mediaSession.setActionHandler('pause', () => { player.pause(); });
+                navigator.mediaSession.setActionHandler('nexttrack', () => stepStation(1));
+                navigator.mediaSession.setActionHandler('previoustrack', () => stepStation(-1));
+            } catch (e) {}
+        }
     </script>
 </body>
 </html>
