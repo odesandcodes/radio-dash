@@ -2,19 +2,24 @@
 // the app shell for fast loads. Audio streams are cross-origin and are
 // never cached. Navigation requests always go to the network first, so a
 // new deploy shows up right away; the cache is only an offline fallback.
-const CACHE = 'radidash-v1';
+const CACHE = 'radidash-v2';
 
 self.addEventListener('install', (event) => {
+    // Cache the shell, but never let a single failed cache entry stop the
+    // worker from activating: Chrome needs an ACTIVE service worker before
+    // it will install the app, and the old code only called skipWaiting()
+    // when every cache.add succeeded. If one file hiccuped, the worker sat
+    // in "waiting" forever and Install failed with "cannot be installed".
     event.waitUntil(
         caches.open(CACHE)
-            .then((cache) => cache.addAll([
-                '/',
- '/manifest.webmanifest',
-                '/icon-192.png',
-                '/icon-512.png'
+            .then((cache) => Promise.allSettled([
+                cache.add('/'),
+                cache.add('/manifest.webmanifest'),
+                cache.add('/icon-192.png'),
+                cache.add('/icon-512.png')
             ]))
-            .then(() => self.skipWaiting())
             .catch(() => {})
+            .then(() => self.skipWaiting())
     );
 });
 
