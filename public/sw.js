@@ -38,8 +38,9 @@ self.addEventListener('fetch', (event) => {
     const url = new URL(event.request.url);
     if (url.origin !== self.location.origin) return; // leave streams alone
 
-    // Page loads: network first, so deploys are never stale.
-    if (event.request.mode === 'navigate') {
+    // Page loads and the manifest: network first, so deploys (including
+    // manifest changes like orientation) are never stale.
+    if (event.request.mode === 'navigate' || url.pathname === '/manifest.webmanifest') {
         event.respondWith(
             fetch(event.request).catch(() => caches.match('/'))
         );
