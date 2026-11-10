@@ -335,6 +335,11 @@ export const prerender = true;
         const statusEl = document.getElementById('status');
         let currentId = null;
         let lastId = null;
+        // Remember the last station across app launches, so a single
+        // earbud tap on a cold open can resume it (see the Media Session
+        // 'play' handler below). Not auto-play: nothing starts on load,
+        // the tap still does the starting.
+        try { lastId = localStorage.getItem('radidash-last'); } catch (e) {}
         let playSeq = 0;
         let switching = false;
 
@@ -372,6 +377,7 @@ export const prerender = true;
             if (card) card.classList.add('playing');
             setStatus('Playing: ' + titleFor(currentId));
             lastId = currentId;
+            try { localStorage.setItem('radidash-last', currentId); } catch (e) {}
             updateMediaMetadata();
         });
         player.addEventListener('pause', () => {
@@ -479,7 +485,7 @@ export const prerender = true;
                         if (player.paused) player.play().catch(() => {});
                         return;
                     }
-                    const card = lastId ? cardFor(lastId) : stationCards[0];
+                    const card = (lastId && cardFor(lastId)) || stationCards[0];
                     if (card) card.click();
                 });
                 navigator.mediaSession.setActionHandler('pause', () => { player.pause(); });
