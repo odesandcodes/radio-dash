@@ -282,9 +282,17 @@ export const prerender = true;
                     title: 'Deep Space One',
                     desc: 'Ambient space music',
                     url: 'https://ice1.somafm.com/deepspaceone-128-mp3'
+                },
+                {
+                    id: 'wor',
+                    name: 'WOR',
+                    title: 'WOR 710 AM',
+                    desc: 'Clay & Buck, Hannity',
+                    url: 'https://stream.revma.ihrhls.com/zc5874/hls.m3u8',
+                    hls: true
                 }
             ].map((st) => (
-                <div class="card" id={`card-${st.id}`} data-url={st.url}>
+                <div class="card" id={`card-${st.id}`} data-url={st.url} data-hls={st.hls ? '1' : ''}>
                     <div class="btn-ui">
                         <svg class="icon-play" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M8 5v14l11-7z"/>
@@ -318,7 +326,8 @@ export const prerender = true;
             <a href="https://www.am970theanswer.com" target="_blank">WNYM 970 The Answer</a><br>
             <a href="https://www.radioswissclassic.ch" target="_blank">Radio Swiss Classic</a><br>
             <a href="https://www.kusc.org" target="_blank">KUSC Classical California</a><br>
-            <a href="https://somafm.com" target="_blank">SomaFM</a>
+            <a href="https://somafm.com" target="_blank">SomaFM</a><br>
+            <a href="https://710wor.iheart.com" target="_blank">WOR 710 New York</a>
         </div>
         <div class="disclaimer">
             All streams are served directly from their respective sources. 
@@ -342,6 +351,68 @@ export const prerender = true;
         try { lastId = localStorage.getItem('radidash-last'); } catch (e) {}
         let playSeq = 0;
         let switching = false;
+
+        // WOR 710 is an HLS (.m3u8) stream, not a plain MP3 — Chrome on
+        // Android will not play HLS in a bare <audio> element, so it
+        // needs hls.js driving the element through MSE. Loaded on demand
+        // only when WOR is tapped, so the other eight stations pay
+        // nothing for it. The stream URL is tokenized with a short TTL,
+        // so a long listen will hit a fatal network error when the token
+        // dies; the recovery below just reloads the source (a fresh
+        // token) a few times with backoff before giving up.
+        let hls = null;
+        let hlsRetries = 0;
+        let hlsLoadPromise = null;
+        function loadHls() {
+            if (window.Hls) return Promise.resolve(window.Hls);
+            if (hlsLoadPromise) return hlsLoadPromise;
+            hlsLoadPromise = new Promise((resolve, reject) => {
+                function trySrc(src, fallback) {
+                    const s = document.createElement('script');
+                    let done = false;
+                    const timer = setTimeout(() => {
+                        if (done) return; done = true;
+                        if (fallback) trySrc(fallback, null);
+                        else reject(new Error('hls.js load timed out'));
+                    }, 10000);
+                    s.onload = () => {
+                        if (done) return; done = true; clearTimeout(timer);
+                        window.Hls ? resolve(window.Hls) : reject(new Error('hls.js loaded but Hls is missing'));
+                    };
+                    s.onerror = () => {
+                        if (done) return; done = true; clearTimeout(timer);
+                        if (fallback) trySrc(fallback, null);
+                        else reject(new Error('hls.js failed to load'));
+                    };
+                    s.src = src;
+                    document.head.appendChild(s);
+                }
+                trySrc('https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js', 'https://unpkg.com/hls.js@1/dist/hls.min.js');
+            }).catch(err => { hlsLoadPromise = null; throw err; });
+            return hlsLoadPromise;
+        }
+        function destroyHls() {
+            if (hls) { try { hls.destroy(); } catch (e) {} hls = null; }
+        }
+        function onHlsError(event, data, mySeq, id, url) {
+            if (!data || !data.fatal) return;
+            if (mySeq !== playSeq || currentId !== id || !hls) return;
+            if (hlsRetries < 3) {
+                hlsRetries++;
+                setStatus('Reconnecting: ' + titleFor(id) + '…');
+                const attempt = hlsRetries;
+                setTimeout(() => {
+                    if (mySeq !== playSeq || currentId !== id || !hls) return;
+                    try { hls.loadSource(url); } catch (e) {}
+                }, 1000 * attempt);
+                return;
+            }
+            switching = false;
+            destroyHls();
+            clearCardState();
+            currentId = null;
+            setStatus("Couldn't play that station — tap it again to retry");
+        }
 
         function setStatus(msg) { if (statusEl) statusEl.textContent = msg || ''; }
         function clearCardState() {
@@ -388,6 +459,10 @@ export const prerender = true;
             if (currentId) setStatus('Paused');
         });
         player.addEventListener('error', () => {
+            // Ignore errors raised while a switch is in flight — the old
+            // stream tearing down must not clobber the new one.
+            if (switching) return;
+            destroyHls();
             clearCardState();
             currentId = null;
             setStatus("Couldn't play that station — tap it again to retry");
@@ -401,10 +476,12 @@ export const prerender = true;
             card.addEventListener('click', async () => {
                 const id = card.id.replace('card-', '');
                 const url = card.dataset.url;
+                const isHls = !!card.dataset.hls;
 
                 // Tap the station that's actually playing: pause it.
                 if (currentId === id && !player.paused) {
                     player.pause();
+                    destroyHls();
                     currentId = null;
                     clearCardState();
                     setStatus('Paused');
@@ -420,7 +497,67 @@ export const prerender = true;
                 card.classList.add('loading');
                 setStatus('Loading: ' + titleFor(id) + '…');
                 currentId = id;
+                destroyHls();
                 try { player.pause(); } catch (e) {}
+
+                if (isHls) {
+                    // HLS (WOR 710): Chrome on Android will not play an
+                    // .m3u8 in a bare <audio> element, so hls.js drives
+                    // the audio element through MSE. Load it on demand —
+                    // the other eight stations never pay for it.
+                    try { await loadHls(); } catch (e) {
+                        if (mySeq !== playSeq) return;
+                        switching = false;
+                        clearCardState();
+                        currentId = null;
+                        setStatus("Couldn't play that station — tap it again to retry");
+                        return;
+                    }
+                    if (mySeq !== playSeq) return;
+                    if (window.Hls && Hls.isSupported()) {
+                        hlsRetries = 0;
+                        hls = new Hls({ debug: false });
+                        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                            if (mySeq !== playSeq) return;
+                            hlsRetries = 0;
+                            player.play().catch(() => {});
+                        });
+                        hls.on(Hls.Events.ERROR, (ev, data) => onHlsError(ev, data, mySeq, id, url));
+                        player.removeAttribute('src');
+                        hls.loadSource(url);
+                        hls.attachMedia(player);
+                        switching = false;
+                        // 'playing' event above adds the highlight once audio
+                        // is really flowing; the HLS error handler covers the
+                        // token dying mid-listen by reloading the source.
+                        return;
+                    }
+                    if (player.canPlayType('application/vnd.apple.mpegurl')) {
+                        // Native HLS (Safari and friends): the plain audio
+                        // element can play it, no library needed.
+                        player.src = url;
+                        try { player.load(); } catch (e) {}
+                        try {
+                            await player.play();
+                        } catch (e) {
+                            if (mySeq !== playSeq) return;
+                            switching = false;
+                            clearCardState();
+                            currentId = null;
+                            setStatus("Couldn't play that station — tap it again to retry");
+                            return;
+                        }
+                        switching = false;
+                        return;
+                    }
+                    // This browser can play neither MSE HLS nor native HLS.
+                    switching = false;
+                    clearCardState();
+                    currentId = null;
+                    setStatus("Couldn't play that station — tap it again to retry");
+                    return;
+                }
+
                 player.src = url;
                 try { player.load(); } catch (e) {}
                 try {
