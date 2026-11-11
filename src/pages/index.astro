@@ -269,7 +269,8 @@ export const prerender = true;
                     name: 'BBC',
                     title: 'World Service',
                     desc: '24/7 world news',
-                    url: 'https://stream.live.vc.bbcmedia.co.uk/bbc_world_service'
+                    url: 'https://as-hls-ww-live.akamaized.net/pool_87948813/live/ww/bbc_world_service/bbc_world_service.isml/bbc_world_service-audio=96000.norewind.m3u8',
+                    hls: true
                 },
                 {
                     id: 'wnym',
@@ -376,14 +377,16 @@ export const prerender = true;
         let playSeq = 0;
         let switching = false;
 
-        // WOR 710 is an HLS (.m3u8) stream, not a plain MP3 — Chrome on
-        // Android will not play HLS in a bare <audio> element, so it
-        // needs hls.js driving the element through MSE. Loaded on demand
-        // only when WOR is tapped, so the other eight stations pay
-        // nothing for it. The stream URL is tokenized with a short TTL,
-        // so a long listen will hit a fatal network error when the token
-        // dies; the recovery below just reloads the source (a fresh
-        // token) a few times with backoff before giving up.
+        // WOR 710 and BBC World Service are HLS (.m3u8) streams, not
+        // plain MP3 — Chrome on Android will not play HLS in a bare
+        // <audio> element, so they need hls.js driving the element
+        // through MSE. Loaded on demand only when an HLS tile is tapped,
+        // so the other seven stations pay nothing for it. WOR's stream
+        // URL is tokenized with a short TTL, so a long listen will hit a
+        // fatal network error when the token dies; the recovery below
+        // just reloads the source (a fresh token) a few times with
+        // backoff before giving up. The BBC HLS stream has no token —
+        // the same recovery covers a dropped connection there.
         let hls = null;
         let hlsRetries = 0;
         let hlsLoadPromise = null;
@@ -529,10 +532,11 @@ export const prerender = true;
                 try { player.pause(); } catch (e) {}
 
                 if (isHls) {
-                    // HLS (WOR 710): Chrome on Android will not play an
-                    // .m3u8 in a bare <audio> element, so hls.js drives
-                    // the audio element through MSE. Load it on demand —
-                    // the other eight stations never pay for it.
+                    // HLS (WOR 710, BBC World Service): Chrome on Android
+                    // will not play an .m3u8 in a bare <audio> element,
+                    // so hls.js drives the audio element through MSE.
+                    // Load it on demand — the other seven stations never
+                    // pay for it.
                     try { await loadHls(); } catch (e) {
                         if (mySeq !== playSeq) return;
                         switching = false;
