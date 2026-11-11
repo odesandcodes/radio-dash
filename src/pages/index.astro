@@ -87,12 +87,31 @@ export const prerender = true;
         }
 
         .status {
-            margin-top: 4px;
-            min-height: 1em;
-            font-size: 0.75rem;
+            margin-top: 6px;
+            min-height: 1.2em;
+            font-size: 1rem;
+            font-weight: 600;
             color: var(--text-muted);
             text-align: center;
         }
+
+        /* Glanceable state dot: green = playing, amber = loading /
+           buffering, grey = paused, red = couldn't play. Only shows
+           once a state has been set. */
+        .status[data-state]::before {
+            content: '';
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--text-muted);
+            margin-right: 7px;
+        }
+        .status[data-state="playing"]::before { background: #22c55e; }
+        .status[data-state="loading"]::before,
+        .status[data-state="buffering"]::before { background: #f59e0b; }
+        .status[data-state="paused"]::before { background: #94a3b8; }
+        .status[data-state="error"]::before { background: #ef4444; }
         
         .card { 
             background: var(--card); 
@@ -111,7 +130,12 @@ export const prerender = true;
         }
         
         .card:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        .card.playing { border-color: var(--accent); border-width: 2px; transform: scale(1.02); }
+        .card.playing {
+            border-color: var(--accent);
+            border-width: 3px;
+            transform: scale(1.02);
+            background: color-mix(in srgb, var(--accent) 9%, var(--card));
+        }
         .card.loading { border-color: var(--accent); border-style: dashed; }
         
         .btn-ui { 
@@ -152,7 +176,7 @@ export const prerender = true;
         .viz { 
             display: flex; 
             gap: 3px; 
-            height: 8px; 
+            height: 10px; 
             align-items: flex-end; 
             justify-content: center;
             opacity: 0; 
@@ -164,7 +188,7 @@ export const prerender = true;
             width: 3px; 
             background: var(--accent); 
             border-radius: 1px; 
-            height: 4px; 
+            height: 5px; 
         }
         
         .playing .bar { animation: bounce 0.6s infinite ease-in-out; }
@@ -172,8 +196,8 @@ export const prerender = true;
         .playing .bar:nth-child(3) { animation-delay: 0.3s; }
         
         @keyframes bounce { 
-            0%, 100% { height: 4px; } 
-            50% { height: 8px; } 
+            0%, 100% { height: 5px; } 
+            50% { height: 10px; } 
         }
         
         footer { 
@@ -241,11 +265,11 @@ export const prerender = true;
                     url: 'https://fm939.wnyc.org/wnycfm'
                 },
                 {
-                    id: 'wabc',
-                    name: 'WABC',
-                    title: 'WABC 770 AM',
-                    desc: 'Kelly, Sid & Kilmeade',
-                    url: 'https://playerservices.streamtheworld.com/api/livestream-redirect/WABCAM.mp3'
+                    id: 'bbcws',
+                    name: 'BBC',
+                    title: 'World Service',
+                    desc: '24/7 world news',
+                    url: 'https://stream.live.vc.bbcmedia.co.uk/bbc_world_service'
                 },
                 {
                     id: 'wnym',
@@ -322,7 +346,7 @@ export const prerender = true;
             <strong>Stream Sources:</strong><br>
             <a href="https://www.wqxr.org" target="_blank">WQXR New York Public Radio</a><br>
             <a href="https://www.wnyc.org" target="_blank">WNYC New York Public Radio</a><br>
-            <a href="https://www.wabcradio.com" target="_blank">WABC New York</a><br>
+            <a href="https://www.bbc.com/worldservice" target="_blank">BBC World Service</a><br>
             <a href="https://www.am970theanswer.com" target="_blank">WNYM 970 The Answer</a><br>
             <a href="https://www.radioswissclassic.ch" target="_blank">Radio Swiss Classic</a><br>
             <a href="https://www.kusc.org" target="_blank">KUSC Classical California</a><br>
@@ -399,7 +423,7 @@ export const prerender = true;
             if (mySeq !== playSeq || currentId !== id || !hls) return;
             if (hlsRetries < 3) {
                 hlsRetries++;
-                setStatus('Reconnecting: ' + titleFor(id) + '…');
+                setStatus('Reconnecting: ' + titleFor(id) + '…', 'loading');
                 const attempt = hlsRetries;
                 setTimeout(() => {
                     if (mySeq !== playSeq || currentId !== id || !hls) return;
@@ -411,10 +435,14 @@ export const prerender = true;
             destroyHls();
             clearCardState();
             currentId = null;
-            setStatus("Couldn't play that station — tap it again to retry");
+            setStatus("Couldn't play that station — tap it again to retry", 'error');
         }
 
-        function setStatus(msg) { if (statusEl) statusEl.textContent = msg || ''; }
+        function setStatus(msg, state) {
+            if (!statusEl) return;
+            statusEl.textContent = msg || '';
+            if (state) statusEl.dataset.state = state;
+        }
         function clearCardState() {
             document.querySelectorAll('.card').forEach(c => c.classList.remove('playing', 'loading'));
         }
@@ -446,7 +474,7 @@ export const prerender = true;
             if (!currentId) return;            clearCardState();
             const card = cardFor(currentId);
             if (card) card.classList.add('playing');
-            setStatus('Playing: ' + titleFor(currentId));
+            setStatus('Playing: ' + titleFor(currentId), 'playing');
             lastId = currentId;
             try { localStorage.setItem('radidash-last', currentId); } catch (e) {}
             updateMediaMetadata();
@@ -456,7 +484,7 @@ export const prerender = true;
             // to switch stations — ignore it during a switch.
             if (switching) return;
             clearCardState();
-            if (currentId) setStatus('Paused');
+            if (currentId) setStatus('Paused', 'paused');
         });
         player.addEventListener('error', () => {
             // Ignore errors raised while a switch is in flight — the old
@@ -465,10 +493,10 @@ export const prerender = true;
             destroyHls();
             clearCardState();
             currentId = null;
-            setStatus("Couldn't play that station — tap it again to retry");
+            setStatus("Couldn't play that station — tap it again to retry", 'error');
         });
         player.addEventListener('waiting', () => {
-            if (currentId) setStatus('Buffering: ' + titleFor(currentId) + '…');
+            if (currentId) setStatus('Buffering: ' + titleFor(currentId) + '…', 'buffering');
         });
 
         // Station playback
@@ -484,7 +512,7 @@ export const prerender = true;
                     destroyHls();
                     currentId = null;
                     clearCardState();
-                    setStatus('Paused');
+                    setStatus('Paused', 'paused');
                     return;
                 }
 
@@ -495,7 +523,7 @@ export const prerender = true;
                 switching = true;
                 clearCardState();
                 card.classList.add('loading');
-                setStatus('Loading: ' + titleFor(id) + '…');
+                setStatus('Loading: ' + titleFor(id) + '…', 'loading');
                 currentId = id;
                 destroyHls();
                 try { player.pause(); } catch (e) {}
@@ -510,7 +538,7 @@ export const prerender = true;
                         switching = false;
                         clearCardState();
                         currentId = null;
-                        setStatus("Couldn't play that station — tap it again to retry");
+                        setStatus("Couldn't play that station — tap it again to retry", 'error');
                         return;
                     }
                     if (mySeq !== playSeq) return;
@@ -544,7 +572,7 @@ export const prerender = true;
                             switching = false;
                             clearCardState();
                             currentId = null;
-                            setStatus("Couldn't play that station — tap it again to retry");
+                            setStatus("Couldn't play that station — tap it again to retry", 'error');
                             return;
                         }
                         switching = false;
@@ -554,7 +582,7 @@ export const prerender = true;
                     switching = false;
                     clearCardState();
                     currentId = null;
-                    setStatus("Couldn't play that station — tap it again to retry");
+                    setStatus("Couldn't play that station — tap it again to retry", 'error');
                     return;
                 }
 
@@ -568,7 +596,7 @@ export const prerender = true;
                     switching = false;
                     clearCardState();
                     currentId = null;
-                    setStatus("Couldn't play that station — tap it again to retry");
+                    setStatus("Couldn't play that station — tap it again to retry", 'error');
                     return;
                 }
                 switching = false;
