@@ -73,7 +73,43 @@ export const prerender = true;
         
         .theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
         
-        .container { width: 100%; max-width: 720px; flex-grow: 1; }
+        .container { width: 100%; max-width: 720px; flex-grow: 1; display: flex; flex-direction: column; }
+        .main { flex: 1; min-width: 0; }
+
+        /* Volume slider: vertical, always on the page. Portrait it sits
+           at the bottom, centred; landscape it moves to the right side
+           of the tiles. Controls the <audio> element's own volume, so
+           it stacks with the phone's system volume. */
+        .vol-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            margin-top: 10px;
+        }
+        .vol-box {
+            width: 32px;
+            height: 140px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .vol-box input[type="range"] {
+            width: 140px;
+            margin: 0;
+            transform: rotate(-90deg);
+            accent-color: var(--accent);
+            cursor: pointer;
+        }
+        .vol-val {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+        @media (min-width: 640px) {
+            .container { flex-direction: row; align-items: center; gap: 12px; }
+            .vol-wrap { margin-top: 0; }
+        }
 
         #stations {
             display: grid;
@@ -248,6 +284,7 @@ export const prerender = true;
     </div>
 
     <div class="container">
+        <div class="main">
         <div id="stations">
             {[
                 {
@@ -340,6 +377,13 @@ export const prerender = true;
             ))}
         </div>
         <div id="status" class="status" aria-live="polite"></div>
+        </div>
+        <div class="vol-wrap">
+            <div class="vol-box">
+                <input type="range" id="vol" min="0" max="100" value="100" aria-label="Volume">
+            </div>
+            <div class="vol-val" id="volVal">100%</div>
+        </div>
     </div>
 
     <footer>
@@ -453,6 +497,31 @@ export const prerender = true;
         function titleFor(id) {
             const card = cardFor(id);
             return card ? (card.querySelector('.title') || {}).textContent || id : id;
+        }
+
+        // App volume slider: controls the <audio> element's own volume
+        // (0–1). Separate from the phone's system media volume, so it
+        // stacks with the Buds' touch-and-hold volume and the phone's
+        // volume buttons. Remembered across launches like the last
+        // station; defaults to full (100%) so it changes nothing until
+        // he moves it.
+        const volInput = document.getElementById('vol');
+        const volVal = document.getElementById('volVal');
+        let savedVol = 100;
+        try {
+            const v = parseInt(localStorage.getItem('radidash-vol'), 10);
+            if (!isNaN(v) && v >= 0 && v <= 100) savedVol = v;
+        } catch (e) {}
+        player.volume = savedVol / 100;
+        if (volInput) {
+            volInput.value = savedVol;
+            if (volVal) volVal.textContent = savedVol + '%';
+            volInput.addEventListener('input', () => {
+                const v = parseInt(volInput.value, 10);
+                player.volume = v / 100;
+                if (volVal) volVal.textContent = v + '%';
+                try { localStorage.setItem('radidash-vol', String(v)); } catch (e) {}
+            });
         }
 
         // Theme toggle
