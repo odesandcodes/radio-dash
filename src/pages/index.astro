@@ -76,28 +76,21 @@ export const prerender = true;
         .container { width: 100%; max-width: 720px; flex-grow: 1; display: flex; flex-direction: column; }
         .main { flex: 1; min-width: 0; }
 
-        /* Volume slider: vertical, always on the page. Portrait it sits
-           at the bottom, centred; landscape it moves to the right side
-           of the tiles. Controls the <audio> element's own volume, so
-           it stacks with the phone's system volume. */
+        /* Volume slider: horizontal, always on the page. Portrait it
+           sits at the bottom, centred; landscape it moves to the top,
+           above the tiles. Controls the <audio> element's own volume,
+           so it stacks with the phone's system volume. */
         .vol-wrap {
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 6px;
-            margin-top: 10px;
-        }
-        .vol-box {
-            width: 32px;
-            height: 140px;
-            display: flex;
+            flex-direction: row;
             align-items: center;
             justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
         }
-        .vol-box input[type="range"] {
-            width: 140px;
+        .vol-wrap input[type="range"] {
+            width: min(60%, 320px);
             margin: 0;
-            transform: rotate(-90deg);
             accent-color: var(--accent);
             cursor: pointer;
         }
@@ -107,8 +100,7 @@ export const prerender = true;
             color: var(--text-muted);
         }
         @media (min-width: 640px) {
-            .container { flex-direction: row; align-items: center; gap: 12px; }
-            .vol-wrap { margin-top: 0; }
+            .vol-wrap { order: -1; margin-top: 0; margin-bottom: 6px; }
         }
 
         #stations {
@@ -379,9 +371,7 @@ export const prerender = true;
         <div id="status" class="status" aria-live="polite"></div>
         </div>
         <div class="vol-wrap">
-            <div class="vol-box">
-                <input type="range" id="vol" min="0" max="100" value="100" aria-label="Volume">
-            </div>
+            <input type="range" id="vol" min="0" max="100" value="100" aria-label="Volume">
             <div class="vol-val" id="volVal">100%</div>
         </div>
     </div>
