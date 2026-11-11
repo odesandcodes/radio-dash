@@ -34,7 +34,7 @@ export const prerender = true;
             background: var(--bg); 
             color: var(--text-main); 
             margin: 0; 
-            padding: 6px; 
+            padding: 8px; 
             display: flex; 
             flex-direction: column; 
             align-items: center; 
@@ -47,7 +47,7 @@ export const prerender = true;
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
-            margin-bottom: 4px; 
+            margin-bottom: 6px; 
         }
         
         h1 { 
@@ -73,40 +73,12 @@ export const prerender = true;
         
         .theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
         
-        .container { width: 100%; max-width: 720px; flex-grow: 1; display: flex; flex-direction: column; }
-        .main { flex: 1; min-width: 0; }
-
-        /* Volume slider: horizontal, always on the page. Portrait it
-           sits at the bottom, centred; landscape it moves to the top,
-           above the tiles. Controls the <audio> element's own volume,
-           so it stacks with the phone's system volume. */
-        .vol-wrap {
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 6px;
-        }
-        .vol-wrap input[type="range"] {
-            width: min(60%, 320px);
-            margin: 0;
-            accent-color: var(--accent);
-            cursor: pointer;
-        }
-        .vol-val {
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: var(--text-muted);
-        }
-        @media (min-width: 640px) {
-            .vol-wrap { order: -1; margin-top: 0; margin-bottom: 6px; }
-        }
+        .container { width: 100%; max-width: 720px; flex-grow: 1; }
 
         #stations {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 4px;
+            gap: 6px;
         }
 
         /* Landscape phone / wider screen: 3 across, so 6 stations fit in 2 rows */
@@ -115,7 +87,7 @@ export const prerender = true;
         }
 
         .status {
-            margin-top: 4px;
+            margin-top: 6px;
             min-height: 1.2em;
             font-size: 1rem;
             font-weight: 600;
@@ -153,7 +125,7 @@ export const prerender = true;
             gap: 2px; 
             cursor: pointer; 
             box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-            min-height: 88px;
+            min-height: 100px;
             justify-content: center;
         }
         
@@ -276,7 +248,6 @@ export const prerender = true;
     </div>
 
     <div class="container">
-        <div class="main">
         <div id="stations">
             {[
                 {
@@ -369,11 +340,6 @@ export const prerender = true;
             ))}
         </div>
         <div id="status" class="status" aria-live="polite"></div>
-        </div>
-        <div class="vol-wrap">
-            <input type="range" id="vol" min="0" max="100" value="100" aria-label="Volume">
-            <div class="vol-val" id="volVal">100%</div>
-        </div>
     </div>
 
     <footer>
@@ -487,31 +453,6 @@ export const prerender = true;
         function titleFor(id) {
             const card = cardFor(id);
             return card ? (card.querySelector('.title') || {}).textContent || id : id;
-        }
-
-        // App volume slider: controls the <audio> element's own volume
-        // (0–1). Separate from the phone's system media volume, so it
-        // stacks with the Buds' touch-and-hold volume and the phone's
-        // volume buttons. Remembered across launches like the last
-        // station; defaults to full (100%) so it changes nothing until
-        // he moves it.
-        const volInput = document.getElementById('vol');
-        const volVal = document.getElementById('volVal');
-        let savedVol = 100;
-        try {
-            const v = parseInt(localStorage.getItem('radidash-vol'), 10);
-            if (!isNaN(v) && v >= 0 && v <= 100) savedVol = v;
-        } catch (e) {}
-        player.volume = savedVol / 100;
-        if (volInput) {
-            volInput.value = savedVol;
-            if (volVal) volVal.textContent = savedVol + '%';
-            volInput.addEventListener('input', () => {
-                const v = parseInt(volInput.value, 10);
-                player.volume = v / 100;
-                if (volVal) volVal.textContent = v + '%';
-                try { localStorage.setItem('radidash-vol', String(v)); } catch (e) {}
-            });
         }
 
         // Theme toggle
