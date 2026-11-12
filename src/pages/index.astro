@@ -77,13 +77,13 @@ export const prerender = true;
 
         #stations {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(3, 1fr);
             gap: 6px;
         }
 
-        /* Landscape phone / wider screen: 3 across, so 6 stations fit in 2 rows */
+        /* Landscape phone / wider screen: 5 across, so all 10 stations fit in 2 rows */
         @media (min-width: 640px) {
-            #stations { grid-template-columns: repeat(3, 1fr); }
+            #stations { grid-template-columns: repeat(5, 1fr); }
         }
 
         .status {
@@ -293,6 +293,13 @@ export const prerender = true;
                     title: 'KUSC 91.5 FM',
                     desc: 'Classical from LA',
                     url: 'https://playerservices.streamtheworld.com/api/livestream-redirect/KUSCMP256.mp3'
+                },
+                {
+                    id: 'kuscholiday',
+                    name: 'KUSC',
+                    title: 'Holiday',
+                    desc: 'Carols & wintery favorites',
+                    url: 'https://playerservices.streamtheworld.com/api/livestream-redirect/CC2_S01AAC_96.aac'
                 },
                 {
                     id: 'salad',
